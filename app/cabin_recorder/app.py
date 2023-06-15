@@ -51,7 +51,8 @@ class App:
         self.window.after(1, self.update)
 
     def __del__(self):
-        self.vid_0.camera.release()
+        pass
+        # self.vid_0.camera.release()
         
 
 
@@ -82,6 +83,12 @@ class CabinCam_Capture:
                 return (ret, None)
         else:
             return (False, None)
+        
+    def close(self):
+        if self.camera.isOpened():
+            self.camera.release()
+        s
+        
         
     def __del__(self):
         if self.camera.isOpened():
