@@ -1,3 +1,5 @@
 tk
 pillow
 tkdesigner
+pywebview
+pupil-labs-realtime-api

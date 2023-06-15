@@ -14,12 +14,11 @@ import PIL.Image, PIL.ImageTk
 import threading
 import sys, os
 from pathlib import Path
+from uvc_camera import camera
+import webview
 
 OUTPUT_PATH = Path(__file__).parent
 ASSETS_PATH = OUTPUT_PATH / Path(r"assets")
-print(ASSETS_PATH)
-
-
 
 
 class app_avsim_manager:
@@ -37,9 +36,9 @@ class app_avsim_manager:
         self.window.configure(bg = "#FFFFFF")
 
         self.main_canvas = tk.Canvas(self.window, bg = "#FFFFFF", height=self.app_height, width=self.app_width, bd = 0, highlightthickness = 0, relief = "ridge")
-        self.camera0_canvas = tk.Canvas(self.window, bg = "#FFFFFF", height=self.cameraview_height, width=self.cameraview_width, bd = 0, highlightthickness = 0, relief = "ridge")
-        self.camera1_canvas = tk.Canvas(self.window, bg = "#FFFFFF", height=self.cameraview_height, width=self.cameraview_width, bd = 0, highlightthickness = 0, relief = "ridge")
-        self.eyetracker_canvas = tk.Canvas(self.window, bg = "#FFFFFF", height=self.eyetrackerview_height, width=self.eyetrackerview_width, bd = 0, highlightthickness = 0, relief = "ridge")
+        self.camera0_canvas = tk.Canvas(self.window, bg = "#000000", height=self.cameraview_height, width=self.cameraview_width, bd = 0, highlightthickness = 0, relief = "ridge")
+        self.camera1_canvas = tk.Canvas(self.window, bg = "#000000", height=self.cameraview_height, width=self.cameraview_width, bd = 0, highlightthickness = 0, relief = "ridge")
+        self.eyetracker_canvas = tk.Canvas(self.window, bg = "#000000", height=self.eyetrackerview_height, width=self.eyetrackerview_width, bd = 0, highlightthickness = 0, relief = "ridge")
         self.main_canvas.place(x=0, y=0)
         self.camera0_canvas.place(x=38, y=52)
         self.camera1_canvas.place(x=518, y=52)
@@ -48,8 +47,12 @@ class app_avsim_manager:
         self.main_canvas.create_text(38.0, 18.0, anchor="nw", text="In-Cabin Camera Monitoring", fill="#000000", font=("Inter", 15 * -1))
         self.main_canvas.create_text(1007.0, 18.0, anchor="nw", text="Eye Tracker Monitoring", fill="#000000", font=("Inter", 15 * -1))
 
-        self.camera_0 = uvc_camera(0)
-        self.camera_1 = uvc_camera(2)
+        self.camera_0 = camera(0)
+        self.camera_1 = camera(2)
+        
+        # self.eyetracker_canvas.create_window("test", 'https://www.naver.com')
+        t = webview.create_window('test', 'https://www.naver.com')
+        webview.start()
 
         self.update()
         self.window.mainloop()
@@ -77,71 +80,50 @@ class app_avsim_manager:
 
 
     def __del__(self):
-        pass
-        # self.vid_0.camera.release()
+        self.camera_0.close()
+        self.camera_1.close()
         
 
-class uvc_camera:
-    def __init__(self, vid=0):
-        self.vid = vid
-        self.camera = cv2.VideoCapture(vid)
-        if not self.camera.isOpened():
-            raise ValueError("Unable to open camera device vid=",vid)
+# class uvc_camera:
+#     def __init__(self, vid=0):
+#         self.vid = vid
+#         try:
+#             self.camera = cv2.VideoCapture(vid)
+#             if not self.camera.isOpened():
+#                 raise ValueError("Unable to open camera device vid=",vid)
+#         except ValueError as e:
+#             return None
         
-        self.width = self.camera.get(cv2.CAP_PROP_FRAME_WIDTH)
-        self.height = self.camera.get(cv2.CAP_PROP_FRAME_HEIGHT)
-        print("Camera device open id={} ({}x{})".format(vid, self.width, self.height))
-        #device.set(cv2.CAP_PROP_FRAME_WIDTH, 1600)
-        #device.set(cv2.CAP_PROP_FRAME_HEIGHT, 1200)
-        #device.set(cv2.CAP_PROP_AUTO_EXPOSURE, 0)
-        #device.set(cv2.CAP_PROP_AUTO_WB, 0)
+#         self.width = self.camera.get(cv2.CAP_PROP_FRAME_WIDTH)
+#         self.height = self.camera.get(cv2.CAP_PROP_FRAME_HEIGHT)
+#         print("Camera device open id={} ({}x{})".format(vid, self.width, self.height))
 
-    def save(self, fps):
-        filename = str(datetime.datetime.now()) + ".mp4"
-        fourcc = cv2.VideoWriter_fourcc(*'mp4v')
-        self.video = cv2.VideoWriter(filename, fourcc, fps/3.0, (self.width, self.height))
+#     def save(self, fps):
+#         filename = str(datetime.datetime.now()) + ".mp4"
+#         fourcc = cv2.VideoWriter_fourcc(*'mp4v')
+#         self.video = cv2.VideoWriter(filename, fourcc, fps/3.0, (self.width, self.height))
 
-    def grab(self, view_width, view_height):
-        if self.camera.isOpened():
-            ret, raw = self.camera.read()
-            if ret:
-                resized = cv2.resize(raw, dsize=(view_width, view_height), interpolation=cv2.INTER_AREA)
-                resized = cv2.putText(resized, "Camera {}".format(self.vid), (380,30), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0,255,0), 1, cv2.LINE_AA)
-                return (ret, resized)
-            else:
-                return (ret, None)
-        else:
-            return (False, None)
+#     def grab(self, view_width, view_height):
+#         if self.camera.isOpened():
+#             ret, raw = self.camera.read()
+#             if ret:
+#                 resized = cv2.resize(raw, dsize=(view_width, view_height), interpolation=cv2.INTER_AREA)
+#                 resized = cv2.putText(resized, "Camera {}".format(self.vid), (380,30), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0,255,0), 1, cv2.LINE_AA)
+#                 return (ret, resized)
+#             else:
+#                 return (ret, None)
+#         else:
+#             return (False, None)
         
-    def close(self):
-        if self.camera.isOpened():
-            self.camera.release()
+#     def close(self):
+#         if self.camera.isOpened():
+#             self.camera.release()
         
         
-    def __del__(self):
-        if self.camera.isOpened():
-            self.camera.release()
+#     def __del__(self):
+#         if self.camera.isOpened():
+#             self.camera.release()
 
 
 if __name__=="__main__":
     app_avsim_manager(tk.Tk(), "AV Simulator Data Recorder")
-
-    # app_window.geometry('640x480+100+100')
-    # app_window.resizable(True, True)
-
-    # app = App(app_window)
-    # app_window.mainloop()
-    
-    # # Menu Definition
-    # app_menu = Menu(app_window)
-    # menu_file_new = Menu(app_menu)
-    # menu_file_new.add_command(label='New')
-    # app_menu.add_cascade(label='File', menu=menu_file_new)
-
-    # menu_window_show_camview = Menu(app_menu)
-    # menu_window_show_camview.add_command(label='Show Camera View')
-    # app_menu.add_cascade(label='Window', menu=menu_window_show_camview)
-
-    # app_window.config(menu=app_menu)
-
-    # app_window.mainloop()
