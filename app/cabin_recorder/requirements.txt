@@ -3,3 +3,4 @@ pillow
 tkdesigner
 pywebview
 pupil-labs-realtime-api
+nest-asyncio
