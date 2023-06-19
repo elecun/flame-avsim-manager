@@ -51,7 +51,7 @@ class app_avsim_manager:
         self.camera3 = None
         self.camera4 = None
         self.camera5 = None
-        self.eyetracker = None # eyetracker device class instance
+        self.eyetracker = eyetracker() # eyetracker device class instance
 
         self.window = window
         self.window.title(window_title)
@@ -119,8 +119,6 @@ class app_avsim_manager:
         btn_neon_discover.place(x=1350.0, y=180)
 
 
-        self.eyetracker = eyetracker()
-
         self.update()
         self.window.mainloop()
 
@@ -173,6 +171,8 @@ class app_avsim_manager:
         if self.eyetracker!=None:
             self.eyetracker.close()
         print("close all devices")
+
+        self.window.quit()
 
 
     def __del__(self):

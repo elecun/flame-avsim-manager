@@ -51,10 +51,10 @@ class camera(threading.Thread):
             return (False, None)
         
     def close(self):
+        self._thread_running = False
         if self.camera.isOpened():
             self.camera.release()
         
         
     def __del__(self):
-        if self.camera.isOpened():
-            self.camera.release()
+        self.close()
