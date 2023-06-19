@@ -10,6 +10,7 @@ from tkinter import ttk
 from tkinter.ttk import Label
 from tkinter import PhotoImage
 from tkinter import Button
+from tkinter import messagebox
 import cv2
 import datetime
 import PIL.Image, PIL.ImageTk
@@ -19,6 +20,7 @@ from pathlib import Path
 from uvc_camera import camera
 from neon import eyetracker
 import threading
+import json
 
 OUTPUT_PATH = Path(__file__).parent
 ASSETS_PATH = OUTPUT_PATH / Path(r"assets")
@@ -36,21 +38,20 @@ class neon_eyetracker:
 
 class app_avsim_manager:
     def __init__(self, window, window_title) -> None:
-        self.app_width = 2160
-        self.app_height = 1020
-        self.cameraview_width = 480
-        self.cameraview_height = 270
-        self.eyetrackerview_width = 585
-        self.eyetrackerview_height = 500
-        self.camera_0 = None
-        self.camera_1 = None
-        self.camera_2 = None
-        self.camera_3 = None
-        self.camera_4 = None
-        self.camera_5 = None
-        self.eyetracker = None
-        
-        self.camera_threads = []
+
+        self.app_width = 1940 # gui window size
+        self.app_height = 1020 # gui window size
+        self.cameraview_width = 480 # camera canvas size
+        self.cameraview_height = 270 # camera canvas size
+        self.eyetrackerview_width = 585 # eyetracker canvas size
+        self.eyetrackerview_height = 500 # eyetracker canvas size
+        self.camera0 = None
+        self.camera1 = None
+        self.camera2 = None
+        self.camera3 = None
+        self.camera4 = None
+        self.camera5 = None
+        self.eyetracker = None # eyetracker device class instance
 
         self.window = window
         self.window.title(window_title)
@@ -59,64 +60,88 @@ class app_avsim_manager:
         self.window.configure(bg = "#FFFFFF")
 
         self.main_canvas = tk.Canvas(self.window, bg = "#FFFFFF", height=self.app_height, width=self.app_width, bd = 0, highlightthickness = 0, relief = "ridge")
+        self.main_canvas.place(x=0, y=0)
+
+        # draw boundary box
+        self.main_canvas.create_rectangle(6, 5, 987+6, 992+5, fill='white', outline='black', width=1) # camera monitoring
+        self.main_canvas.create_rectangle(1000, 5, 463+1000, 992+5, fill='white', outline='black', width=1) # eyetracker monitoring
+        self.main_canvas.create_rectangle(1470, 5, 463+1470, 992+5, fill='white', outline='black', width=1) # scenario handling
+
+        # Labels
+        Label(self.window,text = "In-Cabin Camera", font=("Arial 9"), background="#ffffff").place(x=17, y=15)
+        Label(self.window,text = "Eye Tracker", font=("Arial 9"), background="#ffffff").place(x=1005, y=18)
+
+        # draw camera area
         self.camera0_canvas = tk.Canvas(self.window, bg = "#000000", height=self.cameraview_height, width=self.cameraview_width, bd = 0, highlightthickness = 0, relief = "ridge")
         self.camera1_canvas = tk.Canvas(self.window, bg = "#000000", height=self.cameraview_height, width=self.cameraview_width, bd = 0, highlightthickness = 0, relief = "ridge")
-        self.eyetracker_canvas = tk.Canvas(self.window, bg = "#eeeeee", height=self.eyetrackerview_height, width=self.eyetrackerview_width, bd = 0, highlightthickness = 0, relief = "ridge")
-        self.main_canvas.place(x=0, y=0)
-        self.camera0_canvas.place(x=38, y=52)
-        self.camera1_canvas.place(x=518, y=52)
-        self.eyetracker_canvas.place(x=1007, y=52)
+        self.camera2_canvas = tk.Canvas(self.window, bg = "#000000", height=self.cameraview_height, width=self.cameraview_width, bd = 0, highlightthickness = 0, relief = "ridge")
+        self.camera3_canvas = tk.Canvas(self.window, bg = "#000000", height=self.cameraview_height, width=self.cameraview_width, bd = 0, highlightthickness = 0, relief = "ridge")
+        self.camera4_canvas = tk.Canvas(self.window, bg = "#000000", height=self.cameraview_height, width=self.cameraview_width, bd = 0, highlightthickness = 0, relief = "ridge")
+        self.camera5_canvas = tk.Canvas(self.window, bg = "#000000", height=self.cameraview_height, width=self.cameraview_width, bd = 0, highlightthickness = 0, relief = "ridge")
+        self.camera0_canvas.place(x=17, y=52)
+        self.camera1_canvas.place(x=504, y=52)
+        self.camera2_canvas.place(x=17, y=368)
+        self.camera3_canvas.place(x=504, y=368)
+        self.camera4_canvas.place(x=17, y=684)
+        self.camera5_canvas.place(x=504, y=684)
 
-        # button : record stop
-        btn_record_stop_image = PhotoImage(file=relative_to_assets("record_stop.png"))
-        btn_record_stop = Button(image=btn_record_stop_image,  borderwidth=1,  highlightthickness=2,  command=lambda: print("Data Record Stop"),  relief="flat")
-        btn_record_stop.place(x=2005.0, y=964.0, width=114.0, height=35.0)
+        # camera connector buttons
+        self.btn_camera0_connect = tk.Button(self.window, text="connect", borderwidth=1,  highlightthickness=1, overrelief="solid", width=10, command=lambda:self.camera_connect(0), repeatdelay=1000, repeatinterval=100)
+        self.btn_camera0_connect.place(x=387, y=330)
+        self.btn_camera1_connect = tk.Button(self.window, text="connect", borderwidth=1,  highlightthickness=1, overrelief="solid", width=10, command=lambda: self.camera_connect(2), repeatdelay=1000, repeatinterval=100)
+        self.btn_camera1_connect.place(x=874, y=330)
+        self.btn_camera2_connect = tk.Button(self.window, text="connect", borderwidth=1,  highlightthickness=1, overrelief="solid", width=10, command=lambda: print("connect"), repeatdelay=1000, repeatinterval=100)
+        self.btn_camera2_connect.place(x=387, y=646)
+        self.btn_camera3_connect = tk.Button(self.window, text="connect", borderwidth=1,  highlightthickness=1, overrelief="solid", width=10, command=lambda: print("connect"), repeatdelay=1000, repeatinterval=100)
+        self.btn_camera3_connect.place(x=874, y=646)
+        self.btn_camera4_connect = tk.Button(self.window, text="connect", borderwidth=1,  highlightthickness=1, overrelief="solid", width=10, command=lambda: print("connect"), repeatdelay=1000, repeatinterval=100)
+        self.btn_camera4_connect.place(x=387, y=962)
+        self.btn_camera5_connect = tk.Button(self.window, text="connect", borderwidth=1,  highlightthickness=1, overrelief="solid", width=10, command=lambda: print("connect"), repeatdelay=1000, repeatinterval=100)
+        self.btn_camera5_connect.place(x=874, y=962)
 
-        # button : record start
-        btn_record_start_image = PhotoImage(file=relative_to_assets("record_start.png"))
-        btn_record_start = Button(image=btn_record_start_image,  borderwidth=1,  highlightthickness=2,  command=lambda: print("Data Record Start"),  relief="flat")
-        btn_record_start.place(x=1875.0, y=964.0, width=114.0, height=35.0)
+        # eyetracker info labels
+        Label(self.window,text = "Device IP : ", font=("Arial 9"), background="#ffffff").place(x=1010, y=58)
+        Label(self.window,text = "Device Name : ", font=("Arial 9"), background="#ffffff").place(x=1010, y=83)
+        Label(self.window,text = "Device SOC : ", font=("Arial 9"), background="#ffffff").place(x=1010, y=108)
+        Label(self.window,text = "Device Free Storage(GBytes) : ", font=("Arial 9"), background="#ffffff").place(x=1010, y=133)
 
-        # button : discover eyetracker
-        btn_neon_discover_image = PhotoImage(file=relative_to_assets("neon_discover.png"))
-        btn_neon_discover = Button(image=btn_neon_discover_image,  borderwidth=1,  highlightthickness=2,  command=lambda: print("Eyetracker Device discover"),  relief="flat")
-        btn_neon_discover.place(x=1477.0, y=610.0, width=114.0, height=35.0)
-
-        
-        # Label
-        Label(self.window,text = "In-Cabin Camera Monitoring", font=("Arial 9"), background="#9ce0f7").place(x=38, y=18)
-
-        # Label for eyetracker
-        Label(self.window,text = "Eye Tracker Monitoring", font=("Arial 9"), background="#9ce0f7").place(x=1005, y=18)
-        Label(self.window,text = "Device IP Address : ", font=("Arial 9"), background="#f0f0f0").place(x=1010, y=58)
         self.neon_label_ip = tk.Label(self.window,text = "Not discovered", font=("Arial 9"), background="#f0f0f0")
-        self.neon_label_ip.place(x=1220, y=58)
-
-        Label(self.window,text = "Device Name : ", font=("Arial 9"), background="#f0f0f0").place(x=1010, y=83)
+        self.neon_label_ip.place(x=1150, y=58)
         self.neon_label_name = tk.Label(self.window,text = "Not discovered", font=("Arial 9"), background="#f0f0f0")
-        self.neon_label_name.place(x=1220, y=83)
-
-        Label(self.window,text = "Device SOC : ", font=("Arial 9"), background="#f0f0f0").place(x=1010, y=108)
+        self.neon_label_name.place(x=1170, y=83)
         self.neon_label_soc = tk.Label(self.window,text = "Not discovered", font=("Arial 9"), background="#f0f0f0")
-        self.neon_label_soc.place(x=1220, y=108)
+        self.neon_label_soc.place(x=1160, y=108)
+        self.neon_label_storage = tk.Label(self.window,text = "-", font=("Arial 9"), background="#f0f0f0")
+        self.neon_label_storage.place(x=1350, y=133)
 
-        Label(self.window,text = "Device Free Storage : ", font=("Arial 9"), background="#f0f0f0").place(x=1010, y=133)
-        self.neon_label_storage = tk.Label(self.window,text = "Not discovered", font=("Arial 9"), background="#f0f0f0")
-        self.neon_label_storage.place(x=1220, y=133)
-
-        Label(self.window,text = "Device Serial # : ", font=("Arial 9"), background="#f0f0f0").place(x=1010, y=158)
-        self.neon_label_serial = tk.Label(self.window,text = "Not discovered", font=("Arial 9"), background="#f0f0f0")
-        self.neon_label_serial.place(x=1220, y=158)
+        # eyetracker control buttons
+        btn_neon_discover = Button(self.window, text="discover", borderwidth=1,  highlightthickness=1,  overrelief="solid", width=10, command=self.eyetracker_connect, repeatdelay=1000, repeatinterval=100)
+        btn_neon_discover.place(x=1350.0, y=180)
 
 
-        # apply device
-        # self.camera_0 = camera(0)
-        # self.camera_1 = camera(2)
-        # self.eyetracker = eyetracker()
-        # self.eyetracker.discover()
+        self.eyetracker = eyetracker()
 
         self.update()
         self.window.mainloop()
+
+    def camera_connect(self, vid):
+        if vid ==0:
+            self.camera0 = camera(vid)
+        elif vid==2:
+            self.camera1 = camera(vid)
+
+    # discover the eyetracker device
+    def eyetracker_connect(self):
+        eyetracker_info = self.eyetracker.discover()
+        info = json.loads(eyetracker_info)
+        if info:
+            self.neon_label_ip.config(text=info["ip"])
+            self.neon_label_name.config(text=info["name"])
+            self.neon_label_soc.config(text="{}%".format(info["soc"]))
+            self.neon_label_storage.config(text=info["free"])
+        else:
+            tk.messagebox.showerror("No Device Found", "NEON Eyetracker cannot be found. Please check the device network state.")
+        
 
     def record(self):
         pass
@@ -125,15 +150,15 @@ class app_avsim_manager:
     def update(self):
 
         # camera 0 update
-        if self.camera_0!=None:
-            cam0_ret, cam0_raw = self.camera_0.grab(self.cameraview_width, self.cameraview_height)
+        if self.camera0!=None:
+            cam0_ret, cam0_raw = self.camera0.grab(self.cameraview_width, self.cameraview_height)
             if cam0_ret:
                 self.camera0_image = PIL.ImageTk.PhotoImage(image=PIL.Image.fromarray(cam0_raw))
                 self.camera0_canvas.create_image(self.cameraview_width/2, self.cameraview_height/2, image = self.camera0_image)
 
         # camera 1 updated
-        if self.camera_1!=None:
-            cam1_ret, cam1_raw = self.camera_1.grab(self.cameraview_width, self.cameraview_height)
+        if self.camera1!=None:
+            cam1_ret, cam1_raw = self.camera1.grab(self.cameraview_width, self.cameraview_height)
             if cam1_ret:
                 self.camera1_image = PIL.ImageTk.PhotoImage(image=PIL.Image.fromarray(cam1_raw))
                 self.camera1_canvas.create_image(self.cameraview_width/2, self.cameraview_height/2, image = self.camera1_image)
@@ -141,10 +166,10 @@ class app_avsim_manager:
         self.window.after(30, self.update)
 
     def close(self):
-        if self.camera_0!=None:
-            self.camera_0.close()
-        if self.camera_1!=None:
-            self.camera_1.close()
+        if self.camera0!=None:
+            self.camera0.close()
+        if self.camera1!=None:
+            self.camera1.close()
         if self.eyetracker!=None:
             self.eyetracker.close()
         print("close all devices")

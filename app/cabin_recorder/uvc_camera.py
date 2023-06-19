@@ -6,9 +6,11 @@ import datetime
 import threading
 
 class camera(threading.Thread):
-    def __init__(self, vid=0):
+    def __init__(self, vid=0, view_h=270, view_w=480):
         threading.Thread.__init__(self)
         self.vid = vid
+        self.view_h = view_h
+        self.view_w = view_w
         try:
             self.camera = cv2.VideoCapture(vid)
             if not self.camera.isOpened():
@@ -25,8 +27,11 @@ class camera(threading.Thread):
         while self._thread_running:
             ret, raw = self.camera.read()
             if ret:
-                resized = cv2.resize(raw, dsize=(view_width, view_height), interpolation=cv2.INTER_AREA)
-                
+                resized = cv2.resize(raw, dsize=(self.view_w, self.view_h), interpolation=cv2.INTER_AREA)
+
+    def stop(self):
+        self._thread_running = False
+        self.camera.release()            
         
     def save(self, fps):
         filename = str(datetime.datetime.now()) + ".mp4"
