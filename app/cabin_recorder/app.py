@@ -18,6 +18,7 @@ import sys, os
 from pathlib import Path
 from uvc_camera import camera
 from neon import eyetracker
+import threading
 
 OUTPUT_PATH = Path(__file__).parent
 ASSETS_PATH = OUTPUT_PATH / Path(r"assets")
@@ -48,6 +49,8 @@ class app_avsim_manager:
         self.camera_4 = None
         self.camera_5 = None
         self.eyetracker = None
+        
+        self.camera_threads = []
 
         self.window = window
         self.window.title(window_title)

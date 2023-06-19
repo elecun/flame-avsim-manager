@@ -3,9 +3,11 @@ UVC Camera Device Class with OpenCV
 '''
 import cv2
 import datetime
+import threading
 
-class camera:
+class camera(threading.Thread):
     def __init__(self, vid=0):
+        threading.Thread.__init__(self)
         self.vid = vid
         try:
             self.camera = cv2.VideoCapture(vid)
@@ -17,7 +19,15 @@ class camera:
         self.width = self.camera.get(cv2.CAP_PROP_FRAME_WIDTH)
         self.height = self.camera.get(cv2.CAP_PROP_FRAME_HEIGHT)
         print("Camera device open id={} ({}x{})".format(vid, self.width, self.height))
-
+        self._thread_running = True
+        
+    def run(self):
+        while self._thread_running:
+            ret, raw = self.camera.read()
+            if ret:
+                resized = cv2.resize(raw, dsize=(view_width, view_height), interpolation=cv2.INTER_AREA)
+                
+        
     def save(self, fps):
         filename = str(datetime.datetime.now()) + ".mp4"
         fourcc = cv2.VideoWriter_fourcc(*'mp4v')
