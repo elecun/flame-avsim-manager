@@ -1,0 +1,167 @@
+<?xml version='1.0' encoding='utf-8'?>
+<interface version="1.3">
+  <object class="tk.Toplevel" id="flame_ui_root" named="True">
+    <property name="geometry">1920x1080</property>
+    <property name="height">600</property>
+    <property name="overrideredirect">false</property>
+    <property name="width">1200</property>
+    <child>
+      <object class="ttk.Labelframe" id="frame_camera_monitor" named="True">
+        <property name="height">200</property>
+        <property name="padding">5</property>
+        <property name="text" translatable="yes">In-Cabin Camera Monitor</property>
+        <property name="width">200</property>
+        <layout manager="grid">
+          <property name="column">0</property>
+          <property name="row">0</property>
+        </layout>
+        <child>
+          <object class="tk.Canvas" id="canvas1">
+            <property name="height">270</property>
+            <property name="width">480</property>
+            <layout manager="grid">
+              <property name="column">0</property>
+              <property name="padx">5</property>
+              <property name="row">0</property>
+            </layout>
+          </object>
+        </child>
+        <child>
+          <object class="tk.Canvas" id="canvas2">
+            <property name="background">#000000</property>
+            <property name="height">270</property>
+            <property name="width">480</property>
+            <layout manager="grid">
+              <property name="column">1</property>
+              <property name="row">0</property>
+            </layout>
+          </object>
+        </child>
+        <child>
+          <object class="tk.Canvas" id="canvas3">
+            <property name="height">270</property>
+            <property name="width">480</property>
+            <layout manager="grid">
+              <property name="column">0</property>
+              <property name="pady">5</property>
+              <property name="row">1</property>
+            </layout>
+          </object>
+        </child>
+        <child>
+          <object class="tk.Canvas" id="canvas4">
+            <property name="height">270</property>
+            <property name="width">480</property>
+            <layout manager="grid">
+              <property name="column">1</property>
+              <property name="row">1</property>
+            </layout>
+          </object>
+        </child>
+        <child>
+          <object class="tk.Canvas" id="canvas5">
+            <property name="height">270</property>
+            <property name="width">480</property>
+            <layout manager="grid">
+              <property name="column">0</property>
+              <property name="row">2</property>
+            </layout>
+          </object>
+        </child>
+        <child>
+          <object class="tk.Canvas" id="canvas6">
+            <property name="height">270</property>
+            <property name="width">480</property>
+            <layout manager="grid">
+              <property name="column">1</property>
+              <property name="row">2</property>
+            </layout>
+          </object>
+        </child>
+      </object>
+    </child>
+    <child>
+      <object class="ttk.Labelframe" id="frame_eyetracker_monitor" named="True">
+        <property name="height">870</property>
+        <property name="padding">5</property>
+        <property name="text" translatable="yes">Eye Tracker Monitor</property>
+        <property name="width">200</property>
+        <layout manager="grid">
+          <property name="column">1</property>
+          <property name="padx">5</property>
+          <property name="row">0</property>
+        </layout>
+      </object>
+    </child>
+    <child>
+      <object class="ttk.Labelframe" id="frame_scenario_manager" named="True">
+        <property name="height">870</property>
+        <property name="padding">5</property>
+        <property name="text" translatable="yes">Scenario Manager</property>
+        <property name="width">200</property>
+        <layout manager="grid">
+          <property name="column">2</property>
+          <property name="padx">5</property>
+          <property name="row">0</property>
+        </layout>
+      </object>
+    </child>
+    <child>
+      <object class="ttk.Notebook" id="tab_menu" named="True">
+        <property name="height">200</property>
+        <property name="padding">5</property>
+        <property name="width">1300</property>
+        <layout manager="grid">
+          <property name="column">0</property>
+          <property name="columnspan">3</property>
+          <property name="row">1</property>
+          <property name="sticky">w</property>
+        </layout>
+        <child>
+          <object class="ttk.Notebook.Tab" id="tab_log" named="True">
+            <property name="padding">2</property>
+            <property name="state">normal</property>
+            <property name="text" translatable="yes">Log</property>
+            <child>
+              <object class="tk.Text" id="tab_log_text" named="True">
+                <property name="height">10</property>
+                <property name="width">50</property>
+                <layout manager="pack">
+                  <property name="side">top</property>
+                </layout>
+              </object>
+            </child>
+          </object>
+        </child>
+        <child>
+          <object class="ttk.Notebook.Tab" id="tab_data" named="True">
+            <property name="text" translatable="yes">tab2</property>
+            <child>
+              <object class="ttk.Frame" id="tab_data_frame" named="True">
+                <property name="height">200</property>
+                <property name="width">200</property>
+                <layout manager="pack">
+                  <property name="side">top</property>
+                </layout>
+              </object>
+            </child>
+          </object>
+        </child>
+        <child>
+          <object class="ttk.Notebook.Tab" id="tab_meta" named="True">
+            <property name="text" translatable="yes">tab3</property>
+            <child>
+              <object class="tk.Text" id="tab_meta_text" named="True">
+                <property name="height">10</property>
+                <property name="width">50</property>
+                <layout manager="pack">
+                  <property name="side">top</property>
+                </layout>
+              </object>
+            </child>
+          </object>
+        </child>
+      </object>
+    </child>
+  </object>
+</interface>
