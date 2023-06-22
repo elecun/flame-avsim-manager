@@ -5,11 +5,13 @@ import cv2
 import datetime
 import threading
 import PIL.Image, PIL.ImageTk
+import time
 
 
 class camera(threading.Thread):
     def __init__(self, vid=0, view_h=270, view_w=480, tk_canvas=None):
-        threading.Thread.__init__(self)
+        # threading.Thread.__init__(self)
+        super(camera, self).__init__()
         self.vid = vid
         self.view_h = view_h
         self.view_w = view_w
@@ -27,23 +29,29 @@ class camera(threading.Thread):
         self.height = self.camera.get(cv2.CAP_PROP_FRAME_HEIGHT)
         print("Camera device open id={} ({}x{})".format(vid, self.width, self.height))
         self._thread_running = True
+        super(camera, self).start()
 
         
     def run(self):
+        print("capture thread is starting...")
         while self._thread_running:
             ret, raw = self.camera.read()
             if ret:
                 resized = cv2.resize(raw, dsize=(self.view_w, self.view_h), interpolation=cv2.INTER_AREA)
                 resized = cv2.putText(resized, "Camera {}".format(self.vid), (380,30), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0,255,0), 1, cv2.LINE_AA)
-
+                print("image captured")
                 # draw update on canvas
                 if self.tk_canvas:
                     image_array = PIL.ImageTk.PhotoImage(image=PIL.Image.fromarray(resized))
                     self.tk_canvas.create_image(self.view_w/2, self.view_h/2, image = image_array)
+                else:
+                    print("no draw")
 
-    def stop(self):
-        self._thread_running = False
-        self.camera.release()            
+            time.sleep(0.3)
+
+    # def stop(self):
+    #     self._thread_running = False
+    #     self.camera.release()            
         
     def save(self, fps):
         filename = str(datetime.datetime.now()) + ".mp4"
@@ -64,8 +72,10 @@ class camera(threading.Thread):
         
     def close(self):
         self._thread_running = False
+        super(camera, self).join()
         if self.camera.isOpened():
             self.camera.release()
+        # self.tk_canvas = None
         
         
     def __del__(self):

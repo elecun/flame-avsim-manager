@@ -1,8 +1,8 @@
 <?xml version='1.0' encoding='utf-8'?>
 <interface version="1.3">
   <object class="tk.Toplevel" id="flame_ui_root" named="True">
-    <property name="geometry">1920x1080</property>
     <property name="overrideredirect">false</property>
+    <property name="pady">20</property>
     <property name="title" translatable="yes">IAE AVSIM Data Recorder</property>
     <child>
       <object class="ttk.Labelframe" id="frame_camera_monitor" named="True">
@@ -96,7 +96,8 @@
         </child>
         <child>
           <object class="ttk.Button" id="btn_camera1_connect" named="True">
-            <property name="text" translatable="yes">Connect</property>
+            <property name="command" type="command" cbtype="simple">camera1_connect</property>
+            <property name="text" translatable="yes">Camera-1 Connect</property>
             <layout manager="grid">
               <property name="column">0</property>
               <property name="ipady">5</property>
@@ -108,7 +109,8 @@
         </child>
         <child>
           <object class="ttk.Button" id="btn_camera2_connect" named="True">
-            <property name="text" translatable="yes">Connect</property>
+            <property name="command" type="command" cbtype="simple">camera2_connect</property>
+            <property name="text" translatable="yes">Camera-2 Connect</property>
             <layout manager="grid">
               <property name="column">1</property>
               <property name="ipady">5</property>
@@ -120,7 +122,8 @@
         </child>
         <child>
           <object class="ttk.Button" id="btn_camera3_connect" named="True">
-            <property name="text" translatable="yes">Connect</property>
+            <property name="command" type="command" cbtype="simple">camera3_connect</property>
+            <property name="text" translatable="yes">Camera-3 Connect</property>
             <layout manager="grid">
               <property name="column">0</property>
               <property name="ipady">5</property>
@@ -132,7 +135,8 @@
         </child>
         <child>
           <object class="ttk.Button" id="btn_camera4_connect" named="True">
-            <property name="text" translatable="yes">Connect</property>
+            <property name="command" type="command" cbtype="simple">camera4_connect</property>
+            <property name="text" translatable="yes">Camera-4 Connect</property>
             <layout manager="grid">
               <property name="column">1</property>
               <property name="ipady">5</property>
@@ -144,7 +148,8 @@
         </child>
         <child>
           <object class="ttk.Button" id="btn_camera5_connect" named="True">
-            <property name="text" translatable="yes">Connect</property>
+            <property name="command" type="command" cbtype="simple">camera5_connect</property>
+            <property name="text" translatable="yes">Camera-5 Connect</property>
             <layout manager="grid">
               <property name="column">0</property>
               <property name="ipady">5</property>
@@ -156,7 +161,8 @@
         </child>
         <child>
           <object class="ttk.Button" id="btn_camera6_connect" named="True">
-            <property name="text" translatable="yes">Connect</property>
+            <property name="command" type="command" cbtype="simple">camera6_connect</property>
+            <property name="text" translatable="yes">Camera-6 Connect</property>
             <layout manager="grid">
               <property name="column">1</property>
               <property name="ipady">5</property>
@@ -225,7 +231,7 @@
           </object>
         </child>
         <child>
-          <object class="ttk.Label" id="label5">
+          <object class="ttk.Label" id="label_eyetracker_ip" named="True">
             <property name="padding">3</property>
             <property name="text" translatable="yes">Not discovered</property>
             <layout manager="grid">
@@ -236,7 +242,7 @@
           </object>
         </child>
         <child>
-          <object class="ttk.Label" id="label6">
+          <object class="ttk.Label" id="label_eyetracker_name" named="True">
             <property name="padding">3</property>
             <property name="text" translatable="yes">Not discovered</property>
             <layout manager="grid">
@@ -247,7 +253,7 @@
           </object>
         </child>
         <child>
-          <object class="ttk.Label" id="label7">
+          <object class="ttk.Label" id="label_eyetracker_battery" named="True">
             <property name="padding">3</property>
             <property name="text" translatable="yes">Not discovered</property>
             <layout manager="grid">
@@ -258,7 +264,7 @@
           </object>
         </child>
         <child>
-          <object class="ttk.Label" id="label8">
+          <object class="ttk.Label" id="label_eyetracker_storage" named="True">
             <property name="padding">3</property>
             <property name="text" translatable="yes">Not discovered</property>
             <layout manager="grid">
@@ -282,13 +288,54 @@
         </child>
         <child>
           <object class="ttk.Button" id="btn_eyetracker_discover" named="True">
+            <property name="command" type="command" cbtype="simple">eyetracker_discover</property>
             <property name="text" translatable="yes">Discover</property>
             <layout manager="grid">
               <property name="column">0</property>
               <property name="columnspan">2</property>
+              <property name="ipadx">10</property>
               <property name="ipady">5</property>
               <property name="row">5</property>
               <property name="sticky">e</property>
+            </layout>
+          </object>
+        </child>
+        <child>
+          <object class="ttk.Labelframe" id="labelframe1">
+            <property name="height">200</property>
+            <property name="padding">5</property>
+            <property name="text" translatable="yes">Realtime Data</property>
+            <property name="width">200</property>
+            <layout manager="grid">
+              <property name="column">0</property>
+              <property name="columnspan">2</property>
+              <property name="row">6</property>
+            </layout>
+          </object>
+        </child>
+        <child>
+          <object class="ttk.Button" id="btn_eyetracker_stop" named="True">
+            <property name="command" type="command" cbtype="simple">eyetracker_record_stop</property>
+            <property name="text" translatable="yes">Stop</property>
+            <layout manager="grid">
+              <property name="column">0</property>
+              <property name="ipadx">10</property>
+              <property name="ipady">5</property>
+              <property name="pady">5</property>
+              <property name="row">7</property>
+            </layout>
+          </object>
+        </child>
+        <child>
+          <object class="ttk.Button" id="btn_eyetracker_record" named="True">
+            <property name="command" type="command" cbtype="simple">eyetracker_record_start</property>
+            <property name="text" translatable="yes">Record</property>
+            <layout manager="grid">
+              <property name="column">1</property>
+              <property name="ipadx">10</property>
+              <property name="ipady">5</property>
+              <property name="pady">5</property>
+              <property name="row">7</property>
             </layout>
           </object>
         </child>
@@ -357,6 +404,7 @@
         </child>
         <child>
           <object class="ttk.Button" id="btn_scenario_open" named="True">
+            <property name="command" type="command" cbtype="simple">scenario_file_open</property>
             <property name="text" translatable="yes">Open</property>
             <layout manager="grid">
               <property name="column">1</property>
@@ -389,10 +437,12 @@
               <property name="row">5</property>
             </layout>
             <child>
-              <object class="ttk.Button" id="button10">
+              <object class="ttk.Button" id="btn_scenario_step" named="True">
+                <property name="command" type="command" cbtype="simple">scenario_step</property>
                 <property name="text" translatable="yes">Step &gt;</property>
                 <layout manager="grid">
                   <property name="column">1</property>
+                  <property name="ipadx">10</property>
                   <property name="ipady">5</property>
                   <property name="padx">5</property>
                   <property name="row">0</property>
@@ -400,10 +450,12 @@
               </object>
             </child>
             <child>
-              <object class="ttk.Button" id="button11">
+              <object class="ttk.Button" id="btn_scenario_start" named="True">
+                <property name="command" type="command" cbtype="simple">scenario_run</property>
                 <property name="text" translatable="yes">Run</property>
                 <layout manager="grid">
                   <property name="column">2</property>
+                  <property name="ipadx">10</property>
                   <property name="ipady">5</property>
                   <property name="padx">5</property>
                   <property name="row">0</property>
@@ -411,10 +463,12 @@
               </object>
             </child>
             <child>
-              <object class="ttk.Button" id="button12">
+              <object class="ttk.Button" id="btn_scenario_stop" named="True">
+                <property name="command" type="command" cbtype="simple">scenario_stop</property>
                 <property name="text" translatable="yes">Stop/Hold</property>
                 <layout manager="grid">
                   <property name="column">0</property>
+                  <property name="ipadx">10</property>
                   <property name="ipady">5</property>
                   <property name="padx">5</property>
                   <property name="row">0</property>
@@ -462,24 +516,6 @@
                 </layout>
               </object>
             </child>
-          </object>
-        </child>
-      </object>
-    </child>
-    <child>
-      <object class="ttk.Frame" id="frame2">
-        <property name="height">100</property>
-        <layout manager="grid">
-          <property name="column">1</property>
-          <property name="columnspan">2</property>
-          <property name="row">1</property>
-        </layout>
-        <child>
-          <object class="ttk.Label" id="label11">
-            <property name="image">signature_iae.png</property>
-            <layout manager="pack">
-              <property name="side">top</property>
-            </layout>
           </object>
         </child>
       </object>
