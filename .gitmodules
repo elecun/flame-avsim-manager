@@ -1,3 +1,7 @@
 [submodule "flame"]
 	path = flame
 	url = https://github.com/elecun/flame.git
+	
+[submodule "flame-avsim-cdlink"]
+	path = flame-avsim-cdlink
+	url = https://github.com/elecun/flame-avsim-cdlink.git

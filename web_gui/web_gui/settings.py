@@ -40,7 +40,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     
     # apps
-    'gui'
+    'app_nback'
 ]
 
 MIDDLEWARE = [
@@ -70,6 +70,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'context.flame.context_processors', # for FLAME
             ],
         },
     },
@@ -129,3 +130,9 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/4.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+
+# Custom setting for FLAME
+MQTT_BROKER_ADDRESS = "127.0.0.1"
+MQTT_BROKER_PORT = 1883
+MQTT_BROKER_WEBSCOKET = 8083

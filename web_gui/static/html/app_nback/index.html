@@ -1,0 +1,146 @@
+{% extends "template/base.html" %} 
+
+{% load static %}
+
+{% block css %}
+
+{% endblock %}
+
+{% block javascript %}
+
+
+
+
+<script type="text/javascript">
+
+/* page load */
+window.addEventListener('DOMContentLoaded', function(){
+  console.log("load page")
+});
+
+/* mqtt client */
+let mqtt_client_id = "flame-av-client-"+parseInt(Math.random()*10000, 10);
+var mqtt_client = new Paho.Client("{{system.mqtt_broker_ip}}", Number({{system.mqtt_broker_port}}), mqtt_client_id);
+var mqtt_connected = false;
+mqtt_client.onConnectionLost = mqtt_onConnectionLost;
+mqtt_client.onMessageArrived = mqtt_onMessageArrived;
+mqtt_client.connect({onSuccess:mqtt_onConnect, onFailure:mqtt_onFailure, reconnect: true, useSSL:false});
+
+/* MQTT Connection event callback */
+function mqtt_onConnect(){
+  mqtt_connected = true;
+  mqtt_client.subscribe("mex/#");
+  $.notify("Successfully connected to system!!", {className: "success",position:"bottom left"});
+}
+
+/* MQTT Failure event callback */
+function mqtt_onFailure(){
+  $.notify("System connection has a problem", {className: "error",position:"bottom left"});
+}
+
+/* MQTT Connection lost event callback */
+function mqtt_onConnectionLost(responseObject){
+    mqtt_connected = false;
+    $.notify("System connection is lost", {className: "error",position:"bottom left"});
+}
+
+/* chart update function */
+async function chart_update(ref_id){
+  request_chart_data_ref(ref_id);
+}
+
+var prev_emergency = false;
+
+/* MQTT message arrived event callback */
+function mqtt_onMessageArrived(message){
+    const payload = JSON.parse(message.payloadString);
+    
+    /* status data update */
+    switch(message.topic){
+      case "mex/sensor/temperature": { //temperature data
+        const data = JSON.parse(message.payloadString);
+        document.getElementById('edit_status_temperature_1').value = data.temperature_1;
+        document.getElementById('edit_status_temperature_2').value = data.temperature_2;
+        document.getElementById('edit_status_temperature_3').value = data.temperature_3;
+        $("#edit_status_temperature_1").trigger('change');
+        $("#edit_status_temperature_2").trigger('change');
+        $("#edit_status_temperature_3").trigger('change');
+      } break;
+
+      case "mex/sensor/rpm":{ //rpm data
+        const data = JSON.parse(message.payloadString);
+        document.getElementById('edit_status_rpm').value = data.rpm;
+        $("#edit_status_rpm").trigger('change');
+      } break;
+
+      case "mex/sensor/load":{ //loadcell
+        const data = JSON.parse(message.payloadString);
+        document.getElementById('edit_status_load').value = data.load;
+        $("#edit_status_load").trigger('change');
+      } break;
+
+      case "mex/sensor/relay":{
+        const relay = JSON.parse(message.payloadString);
+        if(relay.relay_emergency && prev_emergency==false){
+          $('#btn_emergency_stop').click();
+          prev_emergency = true;
+        }
+        prev_emergency = relay.relay_emergency;
+
+      } break;
+
+      case "mex/step/program":{
+        const program = JSON.parse(message.payloadString);
+        switch(program.command){
+          case "start": { //program start
+            if(_chart_update_timer_id==null){
+              const ref_id = program.data.id;
+              _chart_update_timer_id = setInterval(chart_update, program.data.update_interval*1000, ref_id);
+            }
+          } break;
+          case "stop": { //program stop
+            if(_chart_update_timer_id!=null){
+              clearInterval(_chart_update_timer_id);
+              _chart_update_timer_id = null;
+              console.log("Stopped chart update");
+            }
+          } break;
+        }
+        
+        
+      } break;
+
+      case "mex/step/status": {
+        const data = JSON.parse(message.payloadString);
+        if(data.state=="start"){ //running
+          update_progress_step_current(data.step_current, data.step_size);
+          row_active(data.step_current-1); //from 0
+          update_progress_step_elapsed(data.current_elapsed, data.total_time);
+        }
+        else if(data.state=="stop"){ //stop
+          row_deactive_all();
+          document.getElementById('modal_notify_content').innerText = "{{menu_ko.message_stopped_steps}}";
+          $('#modal_notify').modal('show');
+        }
+        else if(data.state=="pause"){ //pause
+          document.getElementById('modal_notify_content').innerText = "{{menu_ko.message_paused_steps}}";
+          $('#modal_notify').modal('show');
+        }
+      } break;
+
+      
+      
+    }
+
+}
+
+
+</script>
+
+{% endblock %}
+
+{% block contents %}
+
+
+{% endblock %}
+
