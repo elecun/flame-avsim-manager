@@ -8,11 +8,11 @@ import typing
 from PyQt6 import QtGui
 import pathlib
 import json
-from PyQt6.QtGui import QImage, QPixmap, QCloseEvent, QStandardItem, QStandardItemModel
+from PyQt6.QtGui import QImage, QPixmap, QCloseEvent, QStandardItem, QStandardItemModel, QIcon
 from PyQt6.QtWidgets import QApplication, QMainWindow, QTableView, QLabel, QPushButton, QMessageBox
 from PyQt6.QtWidgets import QFileDialog
 from PyQt6.uic import loadUi
-from PyQt6.QtCore import QObject, Qt, QTimer, QThread, pyqtSignal, pyqtSlot
+from PyQt6.QtCore import QModelIndex, QObject, Qt, QTimer, QThread, pyqtSignal, QAbstractTableModel
 import timeit
 import paho.mqtt.client as mqtt
 from datetime import datetime
@@ -89,9 +89,33 @@ class ScenarioRunner(QTimer):
         
     def stepover_scenario(self):
         print("Not support yet")
-        pass
+        pass        
+
+'''
+Status Tableview Model
+'''    
+class QAppStatusTableModel(QAbstractTableModel):
+    def __init__(self):
+        super(QAppStatusTableModel, self).__init__()
+        self.color = ['#ff0000', '#00ff00']
         
+    def data(self, index, role):
+        if role ==Qt.ItemDataRole.BackgroundRole:
+            value = self.itemdata[index.row()][index.column()]
+            
+            if (isinstance(value, bool)):
+                value = int(value)
+                return QtGui.QColor(self.color[value])
+            
+    def rowCount(self, index):
+        return len(self.itemdata)
     
+    def columnCount(self, index):
+        return len(self.itemdata[0])
+    
+    def appendRow(self, data):
+        self.itemdata = data
+
 '''
 Main window
 '''
