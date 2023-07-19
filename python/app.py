@@ -38,7 +38,7 @@ class ScenarioRunner(QTimer):
         
     # scenario running callback
     def run(self):
-        start_t = timeit.default_timer()
+        #start_t = timeit.default_timer()
         
         # post processing
         t_key = round(self.current_time_idx, 1)
@@ -48,9 +48,13 @@ class ScenarioRunner(QTimer):
             
         self.current_time_idx += self.time_interval/1000 # update time index
         
-        end_t = timeit.default_timer()
+        #end_t = timeit.default_timer()
     
     def load_scenario(self, json_scenario):
+        if self.isActive():
+           print("Not scenario is running... open scenario file after stopping scenario worker") 
+           return
+       
         try:
             if "scenario" in json_scenario:
                 for scene in json_scenario["scenario"]:
@@ -58,25 +62,34 @@ class ScenarioRunner(QTimer):
                     for event in scene["event"]:
                         self.scenario_container[scene["time"]].append(event)
             
-            # for t in self.scenario_container.keys():
-            #     print(self.scenario_container[t], len(self.scenario_container[t]))
-            
         except json.JSONDecodeError as e:
-            pass
+            print("JSON Decode error", str(e))
     
     # start timer
     def run_scenario(self):
-        print("start running scenario...")
+        if self.isActive():
+            self.stop()
         self.start()
     
     # stop timer
     def stop_scenario(self):
-        print("stop running scenario...")
+        self.current_time_idx = 0
         self.stop()
         
-            
-    def __str__(self):
-        return str(self.camera_id)
+    # pause timer
+    def pause_scenario(self):
+        self.stop()
+        
+    # resume
+    def resume_scenario(self):
+        if self.isActive():
+            self.stop()
+        self.start()
+        
+    def stepover_scenario(self):
+        print("Not support yet")
+        pass
+        
     
 '''
 Main window
@@ -87,7 +100,9 @@ class AVSimManager(QMainWindow):
         loadUi(APP_UI, self)
 
         self.sub_api = {}
-        self.columns = ["Index", "Time(s)", "MAPI", "Message"]
+        self.scenario_table_columns = ["Index", "Time(s)", "MAPI", "Message"]
+        self.coapp_table_columns = ["Apps", "Active", "Status"]
+        
         
         # callback function connection for menu
         self.actionOpen.triggered.connect(self.open_scenario_file)
@@ -97,10 +112,21 @@ class AVSimManager(QMainWindow):
         self.btn_scenario_resume.clicked.connect(self.api_resume_scenario)
         self.btn_scenario_stepover.clicked.connect(self.api_stepover_scenario)
         
+        # scenario model for scenario table
         self.scenario_model = QStandardItemModel()
-        self.scenario_model.setColumnCount(len(self.columns))
-        self.scenario_model.setHorizontalHeaderLabels(self.columns)
+        self.scenario_model.setColumnCount(len(self.scenario_table_columns))
+        self.scenario_model.setHorizontalHeaderLabels(self.scenario_table_columns)
         self.table_scenario_contents.setModel(self.scenario_model)
+        
+        # status model for coapp table
+        self.coapp_model = QStandardItemModel()
+        self.coapp_model.setColumnCount(len(self.coapp_table_columns))
+        self.coapp_model.setHorizontalHeaderLabels(self.coapp_table_columns)
+        self.table_coapp_status.setModel(self.coapp_model)
+        coapps = ["AVSim-Cam", "AVSim-CDLink", "AVSim-Neon", "AVSim-CARLA"]
+        for app in coapps:
+            self.coapp_model.appendRow([QStandardItem(app), QStandardItem("-"), QStandardItem("-")])
+        
         
         # for mqtt connection
         self.mq_client = mqtt.Client(client_id="flame-avsim-manager",transport='tcp',protocol=mqtt.MQTTv311, clean_session=True)
@@ -113,11 +139,6 @@ class AVSimManager(QMainWindow):
         # runner instance (with time interval value, 100ms)
         self.runner = ScenarioRunner(interval=100)
         self.runner.do_act_scenario.connect(self.do_publish)
-    
-    def update_scenario(self, data_rows):
-        pass
-        #for row in data_rows
-        # self.scenario_model.appendRow([QStandardItem("1"), QStandardItem("Scenario 1")])
         
         
     def open_scenario_file(self):
@@ -147,13 +168,13 @@ class AVSimManager(QMainWindow):
         self.runner.stop_scenario()
     
     def api_pause_scenario(self):
-        pass
+        self.runner.pause_scenario()
     
     def api_resume_scenario(self):
-        pass
+        self.runner.resume_scenario()
     
     def api_stepover_scenario(self):
-        pass
+        self.runner.stepover_scenario()
     
     def do_publish(self, time, mapi, message):
         self.mq_client.publish(mapi, message, 0)
