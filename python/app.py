@@ -21,6 +21,7 @@ import math
 
 WORKING_PATH = pathlib.Path(__file__).parent
 APP_UI = WORKING_PATH / "MainWindow.ui"
+APP_NAME = "avsim-manager"
 
 '''
 scenario execution thread
@@ -99,7 +100,10 @@ class AVSimManager(QMainWindow):
         super().__init__()
         loadUi(APP_UI, self)
 
-        self.sub_api = {}
+        self.message_api = {
+            "flame/avsim/manager/coapp_status" : self.api_coapp_status,
+            "flame/avsim/notify_active" : self.api_notify_active
+        }
         self.scenario_table_columns = ["Index", "Time(s)", "MAPI", "Message"]
         self.coapp_table_columns = ["Apps", "Active", "Status"]
         
@@ -123,9 +127,10 @@ class AVSimManager(QMainWindow):
         self.coapp_model.setColumnCount(len(self.coapp_table_columns))
         self.coapp_model.setHorizontalHeaderLabels(self.coapp_table_columns)
         self.table_coapp_status.setModel(self.coapp_model)
-        coapps = ["AVSim-Cam", "AVSim-CDLink", "AVSim-Neon", "AVSim-CARLA"]
+        coapps = ["avsim-cam", "avsim-cdlink", "avsim-neon", "avsim-carla"]
         for app in coapps:
             self.coapp_model.appendRow([QStandardItem(app), QStandardItem("-"), QStandardItem("-")])
+            #self.coapp_model.appendRow([QStandardItem(app).setTextAlignment(Qt.AlignmentFlag.AlignCenter), QStandardItem("-"), QStandardItem("-")])
         
         
         # for mqtt connection
@@ -163,9 +168,11 @@ class AVSimManager(QMainWindow):
     # message-based api
     def api_run_scenario(self):
         self.runner.run_scenario()
+        self.show_on_statusbar("Start scenario running...")
     
     def api_stop_scenario(self):
         self.runner.stop_scenario()
+        self.show_on_statusbar("Stopped scenario running...")
     
     def api_pause_scenario(self):
         self.runner.pause_scenario()
@@ -178,7 +185,34 @@ class AVSimManager(QMainWindow):
     
     def do_publish(self, time, mapi, message):
         self.mq_client.publish(mapi, message, 0)
-
+        
+    def api_coapp_status(self, status):
+        pass
+    
+    def api_notify_active(self, payload):
+        if type(payload)!= dict:
+            print("error : payload must be dictionary type")
+            return
+        
+        app_key = "app"
+        active_key = "active"
+        if active_key in payload.keys():
+            active_value = payload[active_key] # boolean
+            # find row
+            for row in range(self.coapp_model.rowCount()):
+                print(type(self.coapp_model.index(row, 0).data()))
+                if self.coapp_model.index(row, 0).data() == payload[app_key]:
+                    # update item data
+                    self.coapp_model.setData(self.coapp_model.index(row, 1), payload[active_key])
+                    break
+            
+        
+    
+    def notify_active(self):
+        if self.mq_client.is_connected():
+            msg = {"app":"avsim-manager", "active":True}
+            self.mq_client.publish("flame/avsim/notify_active", json.dumps(msg), 0)
+        
                 
     # show message on status bar
     def show_on_statusbar(self, text):
@@ -192,14 +226,37 @@ class AVSimManager(QMainWindow):
         return super().closeEvent(a0)
     
     # MQTT callbacks
-    def on_mqtt_connect(self, mqttc, obj, flags, rc):        
+    def on_mqtt_connect(self, mqttc, obj, flags, rc):
+        # subscribe message api
+        for topic in self.message_api.keys():
+            self.mq_client.subscribe(topic, 0)
+        
+        self.notify_active()
         self.show_on_statusbar("Connected to Broker({})".format(str(rc)))
         
     def on_mqtt_disconnect(self, mqttc, userdata, rc):
-        pass
+        self.show_on_statusbar("Disconnected to Broker({})".format(str(rc)))
         
     def on_mqtt_message(self, mqttc, userdata, msg):
-        pass
+        mapi = str(msg.topic)
+        
+        try:
+            if mapi in self.message_api.keys():
+                payload = json.loads(msg.payload)
+                if "app" not in payload:
+                    print("message payload does not contain the app")
+                    return
+                
+                if payload["app"] != APP_NAME:
+                    self.message_api[mapi](payload)
+            else:
+                print("Unknown MAPI was called :", mapi)
+
+        except json.JSONDecodeError as e:
+            print("MAPI Message payload cannot be converted")
+            
+    
+    
         
 
 if __name__ == "__main__":
