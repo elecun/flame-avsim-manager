@@ -92,31 +92,6 @@ class ScenarioRunner(QTimer):
         pass        
 
 '''
-Status Tableview Model
-'''    
-class QAppStatusTableModel(QAbstractTableModel):
-    def __init__(self):
-        super(QAppStatusTableModel, self).__init__()
-        self.color = ['#ff0000', '#00ff00']
-        
-    def data(self, index, role):
-        if role ==Qt.ItemDataRole.BackgroundRole:
-            value = self.itemdata[index.row()][index.column()]
-            
-            if (isinstance(value, bool)):
-                value = int(value)
-                return QtGui.QColor(self.color[value])
-            
-    def rowCount(self, index):
-        return len(self.itemdata)
-    
-    def columnCount(self, index):
-        return len(self.itemdata[0])
-    
-    def appendRow(self, data):
-        self.itemdata = data
-
-'''
 Main window
 '''
 class AVSimManager(QMainWindow):
@@ -129,7 +104,7 @@ class AVSimManager(QMainWindow):
             "flame/avsim/notify_active" : self.api_notify_active
         }
         self.scenario_table_columns = ["Index", "Time(s)", "MAPI", "Message"]
-        self.coapp_table_columns = ["Apps", "Active", "Status"]
+        self.coapp_table_columns = ["App", "Active", "Status"]
         
         
         # callback function connection for menu

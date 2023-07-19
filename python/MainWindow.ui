@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1253</width>
-    <height>1014</height>
+    <width>1251</width>
+    <height>1033</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -216,8 +216,8 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1253</width>
-     <height>24</height>
+     <width>1251</width>
+     <height>43</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
@@ -233,7 +233,8 @@
   <widget class="QStatusBar" name="statusbar"/>
   <action name="actionOpen">
    <property name="icon">
-    <iconset theme="document-open"/>
+    <iconset theme="document-open">
+     <normaloff>.</normaloff>.</iconset>
    </property>
    <property name="text">
     <string>Open operating scenario</string>
