@@ -102,6 +102,7 @@ class AVSimManager(QMainWindow):
         self.message_api = {
             "flame/avsim/manager/coapp_status" : self.api_coapp_status,
             "flame/avsim/notify_active" : self.api_notify_active
+            #"flame/avsim/carla/mapi_set_ego_status"
         }
         self.scenario_table_columns = ["Index", "Time(s)", "MAPI", "Message"]
         self.coapp_table_columns = ["App", "Active", "Status"]

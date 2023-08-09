@@ -4,31 +4,28 @@
         "index": 1,
         "time": 0,
         "event": [
-            { "mapi": "flame/avsim",  "message": "{'target':'nback_task', 'page':0}"},
-            { "mapi": "flame/avsim",  "message": "{'target':'nback_task', 'page':0}"}
+            { "mapi": "flame/avsim/carla/mapi_set_scenario_start",  "message": "{'app':'avsim-manager'}"}
         ]
     },
     {
         "index":2,
         "time":1.1,
         "event":[
-            { "mapi": "flame/avsim",  "message": "{'target':'nback_task', 'page':1}"},
-            { "mapi": "flame/avsim",  "message": "{'target':'nback_task', 'page':1}"}
+          { "mapi": "flame/avsim/carla/mapi_set_scenario_start",  "message": "{'app':'avsim-manager'}"}
         ]
     },
     {
       "index":3,
       "time":2.0,
       "event":[
-          { "mapi": "flame/avsim",  "message": "{'target':'nback_task', 'page':1}"}
+        { "mapi": "flame/avsim/carla/mapi_set_scenario_start",  "message": "{'app':'avsim-manager'}"}
       ]
     },
     {
       "index":4,
       "time":3.5,
       "event":[
-          { "mapi": "flame/avsim",  "message": "{'target':'nback_task', 'page':1}"},
-          { "mapi": "flame/avsim",  "message": "{'target':'nback_task', 'page':1}"}
+        { "mapi": "flame/avsim/carla/mapi_set_scenario_start",  "message": "{'app':'avsim-manager'}"}
       ]
     }
   ]
