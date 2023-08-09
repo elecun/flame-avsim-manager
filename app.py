@@ -8,7 +8,7 @@ import typing
 from PyQt6 import QtGui
 import pathlib
 import json
-from PyQt6.QtGui import QImage, QPixmap, QCloseEvent, QStandardItem, QStandardItemModel, QIcon
+from PyQt6.QtGui import QImage, QPixmap, QCloseEvent, QStandardItem, QStandardItemModel, QIcon, QColor
 from PyQt6.QtWidgets import QApplication, QMainWindow, QTableView, QLabel, QPushButton, QMessageBox
 from PyQt6.QtWidgets import QFileDialog
 from PyQt6.uic import loadUi
@@ -44,8 +44,8 @@ class ScenarioRunner(QTimer):
         # post processing
         t_key = round(self.current_time_idx, 1)
         if t_key in self.scenario_container.keys():
-            for m in self.scenario_container[t_key]:
-                self.do_act_scenario.emit(t_key, m["mapi"], m["message"])
+            for msg in self.scenario_container[t_key]:
+                self.do_act_scenario.emit(t_key, msg["mapi"], msg["message"])
             
         self.current_time_idx += self.time_interval/1000 # update time index
         
@@ -115,12 +115,15 @@ class AVSimManager(QMainWindow):
         self.btn_scenario_pause.clicked.connect(self.api_pause_scenario)
         self.btn_scenario_resume.clicked.connect(self.api_resume_scenario)
         self.btn_scenario_stepover.clicked.connect(self.api_stepover_scenario)
+        self.btn_scenario_reload.clicked.connect(self.scenario_reload)
+        self.btn_scenario_save.clicked.connect(self.scenario_save)
         
         # scenario model for scenario table
         self.scenario_model = QStandardItemModel()
         self.scenario_model.setColumnCount(len(self.scenario_table_columns))
         self.scenario_model.setHorizontalHeaderLabels(self.scenario_table_columns)
         self.table_scenario_contents.setModel(self.scenario_model)
+
         
         # status model for coapp table
         self.coapp_model = QStandardItemModel()
@@ -163,7 +166,25 @@ class AVSimManager(QMainWindow):
                     for data in scenario_json_data["scenario"]:
                         for event in data["event"]:
                             self.scenario_model.appendRow([QStandardItem(str(data["index"])), QStandardItem(str(data["time"])), QStandardItem(event["mapi"]), QStandardItem(event["message"])])
+            self.table_scenario_contents.resizeColumnsToContents()
+            
+    # change row background color
+    def _mark_row_color(self, row):
+        for col in range(self.scenario_model.columnCount()):
+            self.scenario_model.item(row,col).setBackground(QColor(255,0,0,100))
+    
+    # reset all rows background color
+    def _mark_row_reset(self):
+        for col in range(self.scenario_model.columnCount()):
+            for row in range(self.scenario_model.rowCount()):
+                self.scenario_model.item(row,col).setBackground(QColor(0,0,0,0))
+    
+    # scenario reload
+    def scenario_reload(self):
+        pass
         
+    def scenario_save(self):
+        pass
                 
     # message-based api
     def api_run_scenario(self):
@@ -185,6 +206,11 @@ class AVSimManager(QMainWindow):
     
     def do_publish(self, time, mapi, message):
         self.mq_client.publish(mapi, message, 0)
+        
+        self._mark_row_reset()
+        for row in range(self.scenario_model.rowCount()):
+            if time == float(self.scenario_model.item(row, 1).text()):
+                self._mark_row_color(row)
         
     def api_coapp_status(self, status):
         pass
@@ -255,9 +281,6 @@ class AVSimManager(QMainWindow):
         except json.JSONDecodeError as e:
             print("MAPI Message payload cannot be converted")
             
-    
-    
-        
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)

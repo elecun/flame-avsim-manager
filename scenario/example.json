@@ -2,16 +2,26 @@
   "scenario": [
     {
         "index": 1,
-        "time": 0,
+        "time": 0.0,
         "event": [
-            { "mapi": "flame/avsim/carla/mapi_set_scenario_start",  "message": "{'app':'avsim-manager'}"}
+            { "mapi": "flame/avsim/carla/mapi_set_scenario_init",  "message": "{'app':'avsim-manager'}"}
         ]
     },
     {
+      "index":2,
+      "time":3.0,
+      "event":[
+        { "mapi": "flame/avsim/cam/mapi_record_start",  "message": "{'app':'avsim-manager'}"},
+        { "mapi": "flame/avsim/neon/mapi_record_start",  "message": "{'app':'avsim-manager'}"},
+        { "mapi": "flame/avsim/cdlink/mapi_set_url",  "message": "{'app':'avsim-manager'}, 'url':'/'}"}
+      ]
+    },
+    {
         "index":2,
-        "time":1.1,
+        "time":5.0,
         "event":[
-          { "mapi": "flame/avsim/carla/mapi_set_scenario_start",  "message": "{'app':'avsim-manager'}"}
+          { "mapi": "flame/avsim/carla/mapi_set_scenario_start",  "message": "{'app':'avsim-manager'}"},
+          { "mapi": "flame/avsim/mixer/mapi_play",  "message": "{'app':'avsim-manager', 'file':'interior_ambience_10min.mp3', 'volume':0.3}"}
         ]
     },
     {
