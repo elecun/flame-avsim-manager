@@ -148,7 +148,8 @@ class AVSimManager(QMainWindow):
         self.runner = ScenarioRunner(interval=100)
         self.runner.do_act_scenario.connect(self.do_publish)
         
-        
+    
+    # open & load scenario file    
     def open_scenario_file(self):
         selected_file = QFileDialog.getOpenFileName(self, 'Open scenario file', './')
         if selected_file[0]:
