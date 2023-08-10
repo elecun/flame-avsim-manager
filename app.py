@@ -203,21 +203,24 @@ class AVSimManager(QMainWindow):
 
                 # table view column width resizing
                 self.table_scenario_contents.resizeColumnsToContents()
+                
+                self.show_on_statusbar("Scenario is reloaded")
         
     def scenario_save(self):
-        pass
+        self.show_on_statusbar("Scenario is updated")
                 
     # message-based api
     def api_run_scenario(self):
         self.runner.run_scenario()
-        self.show_on_statusbar("Start scenario running...")
+        self.show_on_statusbar("Scenario runner is running...")
     
     def api_stop_scenario(self):
         self.runner.stop_scenario()
-        self.show_on_statusbar("Stopped scenario running...")
+        self.show_on_statusbar("Scenario runner is stopped")
     
     def api_pause_scenario(self):
         self.runner.pause_scenario()
+        self.show_on_statusbar("Scenario runner is paused")
     
     def do_publish(self, time, mapi, message):
         self.mq_client.publish(mapi, message, 0)
@@ -226,6 +229,12 @@ class AVSimManager(QMainWindow):
         for row in range(self.scenario_model.rowCount()):
             if time == float(self.scenario_model.item(row, 1).text()):
                 self._mark_row_color(row)
+                
+    # request active notification
+    def mapi_request_active(self):
+        if self.mq_client.is_connected():
+            msg = {'app':APP_NAME}
+            self.mq_client.publish("flame/avsim/mapi_request_active", json.dumps(msg), 0)
     
     def api_notify_active(self, payload):
         if type(payload)!= dict:
