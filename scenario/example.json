@@ -1,14 +1,12 @@
 {
   "scenario": [
     {
-        "index": 1,
         "time": 0.0,
         "event": [
             { "mapi": "flame/avsim/carla/mapi_set_scenario_init",  "message": "{'app':'avsim-manager'}"}
         ]
     },
     {
-      "index":2,
       "time":3.0,
       "event":[
         { "mapi": "flame/avsim/cam/mapi_record_start",  "message": "{'app':'avsim-manager'}"},
@@ -17,7 +15,6 @@
       ]
     },
     {
-        "index":2,
         "time":5.0,
         "event":[
           { "mapi": "flame/avsim/carla/mapi_set_scenario_start",  "message": "{'app':'avsim-manager'}"},
@@ -25,14 +22,12 @@
         ]
     },
     {
-      "index":3,
       "time":2.0,
       "event":[
         { "mapi": "flame/avsim/carla/mapi_set_scenario_start",  "message": "{'app':'avsim-manager'}"}
       ]
     },
     {
-      "index":4,
       "time":3.5,
       "event":[
         { "mapi": "flame/avsim/carla/mapi_set_scenario_start",  "message": "{'app':'avsim-manager'}"}

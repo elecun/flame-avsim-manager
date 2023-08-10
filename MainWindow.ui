@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>1487</width>
-    <height>1193</height>
+    <height>1151</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -59,10 +59,10 @@
    <widget class="QGroupBox" name="groupBox_2">
     <property name="geometry">
      <rect>
-      <x>10</x>
-      <y>960</y>
-      <width>561</width>
-      <height>141</height>
+      <x>550</x>
+      <y>830</y>
+      <width>341</width>
+      <height>101</height>
      </rect>
     </property>
     <property name="title">
@@ -77,7 +77,7 @@
        <x>10</x>
        <y>30</y>
        <width>100</width>
-       <height>100</height>
+       <height>61</height>
       </rect>
      </property>
      <property name="sizePolicy">
@@ -97,7 +97,7 @@
      </property>
      <property name="icon">
       <iconset>
-       <normaloff>ico/play.png</normaloff>ico/play.png</iconset>
+       <normaloff>ico/play_circle.png</normaloff>ico/play_circle.png</iconset>
      </property>
      <property name="iconSize">
       <size>
@@ -115,7 +115,7 @@
        <x>120</x>
        <y>30</y>
        <width>100</width>
-       <height>100</height>
+       <height>61</height>
       </rect>
      </property>
      <property name="styleSheet">
@@ -126,7 +126,7 @@
      </property>
      <property name="icon">
       <iconset>
-       <normaloff>ico/stop.png</normaloff>ico/stop.png</iconset>
+       <normaloff>ico/stop_circle.png</normaloff>ico/stop_circle.png</iconset>
      </property>
      <property name="iconSize">
       <size>
@@ -141,7 +141,7 @@
        <x>230</x>
        <y>30</y>
        <width>100</width>
-       <height>100</height>
+       <height>61</height>
       </rect>
      </property>
      <property name="styleSheet">
@@ -152,45 +152,13 @@
      </property>
      <property name="icon">
       <iconset>
-       <normaloff>ico/pause.png</normaloff>ico/pause.png</iconset>
+       <normaloff>ico/pause_circle.png</normaloff>ico/pause_circle.png</iconset>
      </property>
      <property name="iconSize">
       <size>
        <width>32</width>
        <height>32</height>
       </size>
-     </property>
-    </widget>
-    <widget class="QPushButton" name="btn_scenario_resume">
-     <property name="geometry">
-      <rect>
-       <x>340</x>
-       <y>30</y>
-       <width>100</width>
-       <height>100</height>
-      </rect>
-     </property>
-     <property name="styleSheet">
-      <string notr="true">background-color: rgb(170, 121, 66);</string>
-     </property>
-     <property name="text">
-      <string>Resume</string>
-     </property>
-    </widget>
-    <widget class="QPushButton" name="btn_scenario_stepover">
-     <property name="geometry">
-      <rect>
-       <x>450</x>
-       <y>30</y>
-       <width>100</width>
-       <height>100</height>
-      </rect>
-     </property>
-     <property name="styleSheet">
-      <string notr="true">background-color: rgb(170, 121, 66);</string>
-     </property>
-     <property name="text">
-      <string>Step Over</string>
      </property>
     </widget>
    </widget>
@@ -249,7 +217,7 @@
      <x>0</x>
      <y>0</y>
      <width>1487</width>
-     <height>43</height>
+     <height>23</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">

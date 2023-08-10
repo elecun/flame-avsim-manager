@@ -19,77 +19,67 @@ from datetime import datetime
 import csv
 import math
 
-WORKING_PATH = pathlib.Path(__file__).parent
-APP_UI = WORKING_PATH / "MainWindow.ui"
-APP_NAME = "avsim-manager"
+WORKING_PATH = pathlib.Path(__file__).parent # working path
+APP_UI = WORKING_PATH / "MainWindow.ui" # Qt-based UI file
+APP_NAME = "avsim-manager" # application name
 
 '''
 scenario execution thread
 '''
 class ScenarioRunner(QTimer):
-    do_act_scenario = pyqtSignal(float, str, str) #time key, mapi, message
 
-    def __init__(self, interval):
+    scenario_act_slot = pyqtSignal(float, str, str) #arguments : time_key, mapi, message
+
+    def __init__(self, interval_ms):
         super().__init__()
-        self.time_interval = interval
-        self.setInterval(interval) # 100ms interval
-        self.timeout.connect(self.run)
-        self.current_time_idx = 0   # time begin 0
-        self.scenario_container = {}
+        self.time_interval = interval_ms # default interval_ms = 100ms
+        self.setInterval(interval_ms)
+        self.timeout.connect(self.on_timeout_callback) # timer callback
+        self.current_time_idx = 0  # time index
+        self.scenario_container = {} # scenario data container
         
-    # scenario running callback
-    def run(self):
-        #start_t = timeit.default_timer()
+    # scenario running callback by timeout event
+    def on_timeout_callback(self):
         
-        # post processing
-        t_key = round(self.current_time_idx, 1)
-        if t_key in self.scenario_container.keys():
-            for msg in self.scenario_container[t_key]:
-                self.do_act_scenario.emit(t_key, msg["mapi"], msg["message"])
+        time_key = round(self.current_time_idx, 1)
+        if time_key in self.scenario_container.keys():
+            for msg in self.scenario_container[time_key]:
+                self.scenario_act_slot.emit(time_key, msg["mapi"], msg["message"])
             
         self.current_time_idx += self.time_interval/1000 # update time index
-        
-        #end_t = timeit.default_timer()
     
-    def load_scenario(self, json_scenario):
-        if self.isActive():
-           print("Not scenario is running... open scenario file after stopping scenario worker") 
-           return
-       
+    # open & load scenario file
+    def load_scenario(self, scenario:dict) -> bool:
+        self.stop_scenario() # if timer is running, stop the scenario runner
+
+        if len(scenario)<1:
+            print("> Empty Scenario. Please check your scenario")
+            return False
+        
         try:
-            if "scenario" in json_scenario:
-                for scene in json_scenario["scenario"]:
-                    self.scenario_container[scene["time"]] = []
-                    for event in scene["event"]:
-                        self.scenario_container[scene["time"]].append(event)
+            if "scenario" in scenario:
+                for scene in scenario["scenario"]:
+                    self.scenario_container[scene["time"]] = [] # time indexed container
+                    for event in scene["event"]: # for every events
+                        self.scenario_container[scene["time"]].append(event) # append event
             
         except json.JSONDecodeError as e:
             print("JSON Decode error", str(e))
     
     # start timer
     def run_scenario(self):
-        if self.isActive():
-            self.stop()
-        self.start()
+        if self.isActive(): # if the timer is now active(=running)
+            self.stop() # stop the timer
+        self.start() # then restart the timer
     
     # stop timer
     def stop_scenario(self):
-        self.current_time_idx = 0
-        self.stop()
+        self.current_time_idx = 0 # timer index set 0
+        self.stop() # timer stop
         
     # pause timer
     def pause_scenario(self):
-        self.stop()
-        
-    # resume
-    def resume_scenario(self):
-        if self.isActive():
-            self.stop()
-        self.start()
-        
-    def stepover_scenario(self):
-        print("Not support yet")
-        pass        
+        self.stop() # stop the timer, but timer index does not set 0
 
 '''
 Main window
@@ -99,12 +89,12 @@ class AVSimManager(QMainWindow):
         super().__init__()
         loadUi(APP_UI, self)
 
+        # mapi interface function (subscribe the mapi)
         self.message_api = {
-            "flame/avsim/manager/coapp_status" : self.api_coapp_status,
-            "flame/avsim/notify_active" : self.api_notify_active
+            "flame/avsim/mapi_notify_active" : self.mapi_notify_active
             #"flame/avsim/carla/mapi_set_ego_status"
         }
-        self.scenario_table_columns = ["Index", "Time(s)", "MAPI", "Message"]
+        self.scenario_table_columns = ["Time(s)", "MAPI", "Message"]
         self.coapp_table_columns = ["App", "Active", "Status"]
         
         
@@ -113,8 +103,6 @@ class AVSimManager(QMainWindow):
         self.btn_scenario_run.clicked.connect(self.api_run_scenario)
         self.btn_scenario_stop.clicked.connect(self.api_stop_scenario)
         self.btn_scenario_pause.clicked.connect(self.api_pause_scenario)
-        self.btn_scenario_resume.clicked.connect(self.api_resume_scenario)
-        self.btn_scenario_stepover.clicked.connect(self.api_stepover_scenario)
         self.btn_scenario_reload.clicked.connect(self.scenario_reload)
         self.btn_scenario_save.clicked.connect(self.scenario_save)
         
@@ -145,8 +133,8 @@ class AVSimManager(QMainWindow):
         self.mq_client.loop_start()
     
         # runner instance (with time interval value, 100ms)
-        self.runner = ScenarioRunner(interval=100)
-        self.runner.do_act_scenario.connect(self.do_publish)
+        self.runner = ScenarioRunner(interval_ms=100)
+        self.runner.scenario_act_slot.connect(self.do_publish)
         
     
     # open & load scenario file    
@@ -166,8 +154,10 @@ class AVSimManager(QMainWindow):
                 if "scenario" in scenario_json_data:
                     for data in scenario_json_data["scenario"]:
                         for event in data["event"]:
-                            self.scenario_model.appendRow([QStandardItem(str(data["index"])), QStandardItem(str(data["time"])), QStandardItem(event["mapi"]), QStandardItem(event["message"])])
-            self.table_scenario_contents.resizeColumnsToContents()
+                            self.scenario_model.appendRow([QStandardItem(str(data["time"])), QStandardItem(event["mapi"]), QStandardItem(event["message"])])
+
+                # table view column width resizing
+                self.table_scenario_contents.resizeColumnsToContents()
             
     # change row background color
     def _mark_row_color(self, row):
@@ -199,12 +189,6 @@ class AVSimManager(QMainWindow):
     def api_pause_scenario(self):
         self.runner.pause_scenario()
     
-    def api_resume_scenario(self):
-        self.runner.resume_scenario()
-    
-    def api_stepover_scenario(self):
-        self.runner.stepover_scenario()
-    
     def do_publish(self, time, mapi, message):
         self.mq_client.publish(mapi, message, 0)
         
@@ -212,9 +196,6 @@ class AVSimManager(QMainWindow):
         for row in range(self.scenario_model.rowCount()):
             if time == float(self.scenario_model.item(row, 1).text()):
                 self._mark_row_color(row)
-        
-    def api_coapp_status(self, status):
-        pass
     
     def api_notify_active(self, payload):
         if type(payload)!= dict:
@@ -235,7 +216,7 @@ class AVSimManager(QMainWindow):
             
         
     
-    def notify_active(self):
+    def mapi_notify_active(self):
         if self.mq_client.is_connected():
             msg = {"app":"avsim-manager", "active":True}
             self.mq_client.publish("flame/avsim/notify_active", json.dumps(msg), 0)
