@@ -37,6 +37,11 @@ class ScenarioRunner(QTimer):
         self.timeout.connect(self.on_timeout_callback) # timer callback
         self.current_time_idx = 0  # time index
         self.scenario_container = {} # scenario data container
+    
+    # reset all params    
+    def initialize(self):
+        self.current_time_idx = 0
+        self.scenario_container.clear()
         
     # scenario running callback by timeout event
     def on_timeout_callback(self):
@@ -85,26 +90,26 @@ class ScenarioRunner(QTimer):
 Main window
 '''
 class AVSimManager(QMainWindow):
-    def __init__(self):
+    def __init__(self, broker_ip:str):
         super().__init__()
         loadUi(APP_UI, self)
 
         # mapi interface function (subscribe the mapi)
         self.message_api = {
-            "flame/avsim/mapi_notify_active" : self.mapi_notify_active
-            #"flame/avsim/carla/mapi_set_ego_status"
+            "flame/avsim/mapi_notify_active" : self.mapi_notify_active,
+            "flame/avsim/mapi_nofity_status" : self.mapi_notify_status
         }
         self.scenario_table_columns = ["Time(s)", "MAPI", "Message"]
         self.coapp_table_columns = ["App", "Active", "Status"]
         
         
         # callback function connection for menu
-        self.actionOpen.triggered.connect(self.open_scenario_file)
-        self.btn_scenario_run.clicked.connect(self.api_run_scenario)
-        self.btn_scenario_stop.clicked.connect(self.api_stop_scenario)
-        self.btn_scenario_pause.clicked.connect(self.api_pause_scenario)
-        self.btn_scenario_reload.clicked.connect(self.scenario_reload)
-        self.btn_scenario_save.clicked.connect(self.scenario_save)
+        self.actionOpen.triggered.connect(self.open_scenario_file)      # menu file open
+        self.btn_scenario_run.clicked.connect(self.api_run_scenario)    # scenario run click event function
+        self.btn_scenario_stop.clicked.connect(self.api_stop_scenario)  # scenario stop click event function
+        self.btn_scenario_pause.clicked.connect(self.api_pause_scenario)# scenario pause click event function
+        self.btn_scenario_reload.clicked.connect(self.scenario_reload)  # scenario reload click event function
+        self.btn_scenario_save.clicked.connect(self.scenario_save)      # scenario update&save click event function
         
         # scenario model for scenario table
         self.scenario_model = QStandardItemModel()
@@ -118,23 +123,24 @@ class AVSimManager(QMainWindow):
         self.coapp_model.setColumnCount(len(self.coapp_table_columns))
         self.coapp_model.setHorizontalHeaderLabels(self.coapp_table_columns)
         self.table_coapp_status.setModel(self.coapp_model)
-        coapps = ["avsim-cam", "avsim-cdlink", "avsim-neon", "avsim-carla"]
+        coapps = ["avsim-cam", "avsim-cdlink", "avsim-neon", "avsim-carla", "avsim-mixer"]
         for app in coapps:
             self.coapp_model.appendRow([QStandardItem(app), QStandardItem("-"), QStandardItem("-")])
-            #self.coapp_model.appendRow([QStandardItem(app).setTextAlignment(Qt.AlignmentFlag.AlignCenter), QStandardItem("-"), QStandardItem("-")])
         
         
         # for mqtt connection
-        self.mq_client = mqtt.Client(client_id="flame-avsim-manager",transport='tcp',protocol=mqtt.MQTTv311, clean_session=True)
+        self.mq_client = mqtt.Client(client_id="flame-avsim-manager", transport='tcp', protocol=mqtt.MQTTv311, clean_session=True)
         self.mq_client.on_connect = self.on_mqtt_connect
         self.mq_client.on_message = self.on_mqtt_message
         self.mq_client.on_disconnect = self.on_mqtt_disconnect
-        self.mq_client.connect_async("127.0.0.1",port=1883,keepalive=60)
+        self.mq_client.connect_async(broker_ip, port=1883, keepalive=60)
         self.mq_client.loop_start()
     
         # runner instance (with time interval value, 100ms)
         self.runner = ScenarioRunner(interval_ms=100)
         self.runner.scenario_act_slot.connect(self.do_publish)
+        
+        self.scenario_filepath = ""
         
     
     # open & load scenario file    
@@ -142,17 +148,19 @@ class AVSimManager(QMainWindow):
         selected_file = QFileDialog.getOpenFileName(self, 'Open scenario file', './')
         if selected_file[0]:
             sfile = open(selected_file[0], "r")
+            self.scenario_filepath = selected_file[0]
+            
             with sfile:
                 try:
-                    scenario_json_data = json.load(sfile)
+                    scenario_data = json.load(sfile)
                 except Exception as e:
                     QMessageBox.critical(self, "Error", "Scenario file read error {}".format(str(e)))
                     
                 # parse scenario file
-                self.runner.load_scenario(scenario_json_data)
+                self.runner.load_scenario(scenario_data)
                 self.scenario_model.setRowCount(0)
-                if "scenario" in scenario_json_data:
-                    for data in scenario_json_data["scenario"]:
+                if "scenario" in scenario_data:
+                    for data in scenario_data["scenario"]:
                         for event in data["event"]:
                             self.scenario_model.appendRow([QStandardItem(str(data["time"])), QStandardItem(event["mapi"]), QStandardItem(event["message"])])
 
@@ -172,7 +180,29 @@ class AVSimManager(QMainWindow):
     
     # scenario reload
     def scenario_reload(self):
-        pass
+        if self.scenario_filepath:
+            sfile = open(self.scenario_filepath, "r")
+            with sfile:
+                try:
+                    # init
+                    self.scenario_model.clear()
+                    self.runner.initialize()
+                    
+                    # reload
+                    scenario_data = json.load(sfile)
+                except Exception as e:
+                    QMessageBox.critical(self, "Error", "Scenario file read error {}".format(str(e)))
+                    
+                # parse scenario file
+                self.runner.load_scenario(scenario_data)
+                self.scenario_model.setRowCount(0)
+                if "scenario" in scenario_data:
+                    for data in scenario_data["scenario"]:
+                        for event in data["event"]:
+                            self.scenario_model.appendRow([QStandardItem(str(data["time"])), QStandardItem(event["mapi"]), QStandardItem(event["message"])])
+
+                # table view column width resizing
+                self.table_scenario_contents.resizeColumnsToContents()
         
     def scenario_save(self):
         pass
@@ -221,6 +251,9 @@ class AVSimManager(QMainWindow):
             msg = {"app":"avsim-manager", "active":True}
             self.mq_client.publish("flame/avsim/notify_active", json.dumps(msg), 0)
         
+     
+    def mapi_notify_status(self, payload):
+        pass
                 
     # show message on status bar
     def show_on_statusbar(self, text):
@@ -239,7 +272,6 @@ class AVSimManager(QMainWindow):
         for topic in self.message_api.keys():
             self.mq_client.subscribe(topic, 0)
         
-        self.notify_active()
         self.show_on_statusbar("Connected to Broker({})".format(str(rc)))
         
     def on_mqtt_disconnect(self, mqttc, userdata, rc):
@@ -266,6 +298,6 @@ class AVSimManager(QMainWindow):
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
-    window = AVSimManager()
+    window = AVSimManager(broker_ip="127.0.0.1")
     window.show()
     sys.exit(app.exec())
