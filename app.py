@@ -124,8 +124,9 @@ class AVSimManager(QMainWindow):
         self.coapp_model.setHorizontalHeaderLabels(self.coapp_table_columns)
         self.table_coapp_status.setModel(self.coapp_model)
         coapps = ["avsim-cam", "avsim-cdlink", "avsim-neon", "avsim-carla", "avsim-mixer"]
-        for app in coapps:
+        for row, app in enumerate(coapps):
             self.coapp_model.appendRow([QStandardItem(app), QStandardItem("-"), QStandardItem("-")])
+            self.coapp_model.item(row, 0).setTextAlignment(Qt.AlignmentFlag.AlignCenter)
         
         
         # for mqtt connection
@@ -141,6 +142,10 @@ class AVSimManager(QMainWindow):
         self.runner.scenario_act_slot.connect(self.do_publish)
         
         self.scenario_filepath = ""
+        
+        # initialize for default
+        for app_row in range(self.coapp_model.rowCount()):
+            self._mark_inactive(app_row)
         
     
     # open & load scenario file    
@@ -177,6 +182,19 @@ class AVSimManager(QMainWindow):
         for col in range(self.scenario_model.columnCount()):
             for row in range(self.scenario_model.rowCount()):
                 self.scenario_model.item(row,col).setBackground(QColor(0,0,0,0))
+                
+    # mark inactive
+    def _mark_inactive(self, row):
+        self.coapp_model.item(row, 1).setBackground(QColor(255,0,0,100))
+        self.coapp_model.item(row, 1).setText("inactive")
+        self.coapp_model.item(row, 1).setTextAlignment(Qt.AlignmentFlag.AlignCenter)
+    
+    # mark active
+    def _mark_active(self, row):
+        self.coapp_model.item(row, 1).setBackground(QColor(0,255,0,100))
+        self.coapp_model.item(row, 1).setText("active")
+        self.coapp_model.item(row, 1).setTextAlignment(Qt.AlignmentFlag.AlignCenter)
+    
     
     # scenario reload
     def scenario_reload(self):
@@ -207,6 +225,7 @@ class AVSimManager(QMainWindow):
                 self.show_on_statusbar("Scenario is reloaded")
         
     def scenario_save(self):
+        print("Not implemented yet.")
         self.show_on_statusbar("Scenario is updated")
                 
     # message-based api
@@ -235,6 +254,9 @@ class AVSimManager(QMainWindow):
         if self.mq_client.is_connected():
             msg = {'app':APP_NAME}
             self.mq_client.publish("flame/avsim/mapi_request_active", json.dumps(msg), 0)
+            
+            # re-initialize all component is inactive
+            self.scenario_model
     
     def api_notify_active(self, payload):
         if type(payload)!= dict:
