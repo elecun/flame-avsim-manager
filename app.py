@@ -94,6 +94,10 @@ class AVSimManager(QMainWindow):
         super().__init__()
         loadUi(APP_UI, self)
 
+        self.message_api_internal = {
+            "flame/avsim/mapi_request_active" : self._mapi_request_active
+        }
+        
         # mapi interface function (subscribe the mapi)
         self.message_api = {
             "flame/avsim/mapi_notify_active" : self.mapi_notify_active,
@@ -139,7 +143,7 @@ class AVSimManager(QMainWindow):
     
         # runner instance (with time interval value, 100ms)
         self.runner = ScenarioRunner(interval_ms=100)
-        self.runner.scenario_act_slot.connect(self.do_publish)
+        self.runner.scenario_act_slot.connect(self.do_process)
         
         self.scenario_filepath = ""
         
@@ -186,13 +190,13 @@ class AVSimManager(QMainWindow):
     # mark inactive
     def _mark_inactive(self, row):
         self.coapp_model.item(row, 1).setBackground(QColor(255,0,0,100))
-        self.coapp_model.item(row, 1).setText("inactive")
+        self.coapp_model.item(row, 1).setText("INACTIVE")
         self.coapp_model.item(row, 1).setTextAlignment(Qt.AlignmentFlag.AlignCenter)
     
     # mark active
     def _mark_active(self, row):
         self.coapp_model.item(row, 1).setBackground(QColor(0,255,0,100))
-        self.coapp_model.item(row, 1).setText("active")
+        self.coapp_model.item(row, 1).setText("ACTIVE")
         self.coapp_model.item(row, 1).setTextAlignment(Qt.AlignmentFlag.AlignCenter)
     
     
@@ -228,21 +232,24 @@ class AVSimManager(QMainWindow):
         print("Not implemented yet.")
         self.show_on_statusbar("Scenario is updated")
                 
-    # message-based api
+    # run scenario with timer
     def api_run_scenario(self):
         self.runner.run_scenario()
         self.show_on_statusbar("Scenario runner is running...")
     
+    # stop scenario with timer
     def api_stop_scenario(self):
         self.runner.stop_scenario()
         self.show_on_statusbar("Scenario runner is stopped")
     
+    # pause scenario with timer
     def api_pause_scenario(self):
         self.runner.pause_scenario()
         self.show_on_statusbar("Scenario runner is paused")
     
-    def do_publish(self, time, mapi, message):
-        self.mq_client.publish(mapi, message, 0)
+    # message api implemented function
+    def do_process(self, time, mapi, message):
+        self.mq_client.publish(mapi, message, 0) # publish mapi interface
         
         self._mark_row_reset()
         for row in range(self.scenario_model.rowCount()):
@@ -250,37 +257,29 @@ class AVSimManager(QMainWindow):
                 self._mark_row_color(row)
                 
     # request active notification
-    def mapi_request_active(self):
+    def _mapi_request_active(self):
         if self.mq_client.is_connected():
             msg = {'app':APP_NAME}
             self.mq_client.publish("flame/avsim/mapi_request_active", json.dumps(msg), 0)
-            
-            # re-initialize all component is inactive
-            self.scenario_model
     
-    def api_notify_active(self, payload):
+    def mapi_notify_active(self, payload):
+        # notified activation
         if type(payload)!= dict:
             print("error : payload must be dictionary type")
             return
         
-        app_key = "app"
         active_key = "active"
         if active_key in payload.keys():
             active_value = payload[active_key] # boolean
             # find row
             for row in range(self.coapp_model.rowCount()):
-                print(type(self.coapp_model.index(row, 0).data()))
-                if self.coapp_model.index(row, 0).data() == payload[app_key]:
+                if self.coapp_model.index(row, 0).data() == payload["app"]:
                     # update item data
-                    self.coapp_model.setData(self.coapp_model.index(row, 1), payload[active_key])
+                    if active_value == True:
+                        self._mark_active(row)
+                    else:
+                        self._mark_inactive(row)
                     break
-            
-        
-    
-    def mapi_notify_active(self):
-        if self.mq_client.is_connected():
-            msg = {"app":"avsim-manager", "active":True}
-            self.mq_client.publish("flame/avsim/notify_active", json.dumps(msg), 0)
         
      
     def mapi_notify_status(self, payload):
