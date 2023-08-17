@@ -18,6 +18,7 @@ import paho.mqtt.client as mqtt
 from datetime import datetime
 import csv
 import math
+import argparse
 
 WORKING_PATH = pathlib.Path(__file__).parent # working path
 APP_UI = WORKING_PATH / "MainWindow.ui" # Qt-based UI file
@@ -327,7 +328,14 @@ class AVSimManager(QMainWindow):
             
 
 if __name__ == "__main__":
-    app = QApplication(sys.argv)
-    window = AVSimManager(broker_ip="127.0.0.1")
-    window.show()
-    sys.exit(app.exec())
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--broker', nargs='?', required=True, help="Broker Address")
+    args = parser.parse_args()
+
+    if args.broker is not None:
+        app = QApplication(sys.argv)
+        window = AVSimManager(broker_ip=args.broker)
+        window.show()
+        sys.exit(app.exec())
+    else:
+        print("Broker IP Address is required")
