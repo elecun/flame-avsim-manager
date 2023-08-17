@@ -329,7 +329,7 @@ class AVSimManager(QMainWindow):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument('--broker', nargs='?', required=True, help="Broker Address")
+    parser.add_argument('--broker', nargs='?', required=False, help="Broker Address")
     args = parser.parse_args()
 
     broker_address = "127.0.0.1"
