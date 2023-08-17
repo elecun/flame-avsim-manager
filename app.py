@@ -30,6 +30,7 @@ scenario execution thread
 class ScenarioRunner(QTimer):
 
     scenario_act_slot = pyqtSignal(float, str, str) #arguments : time_key, mapi, message
+    scenario_end_slot = pyqtSignal()
 
     def __init__(self, interval_ms):
         super().__init__()
@@ -38,6 +39,8 @@ class ScenarioRunner(QTimer):
         self.timeout.connect(self.on_timeout_callback) # timer callback
         self.current_time_idx = 0  # time index
         self.scenario_container = {} # scenario data container
+        
+        self._end_time = 0.0
     
     # reset all params    
     def initialize(self):
@@ -46,11 +49,13 @@ class ScenarioRunner(QTimer):
         
     # scenario running callback by timeout event
     def on_timeout_callback(self):
-        
         time_key = round(self.current_time_idx, 1)
-        if time_key in self.scenario_container.keys():
-            for msg in self.scenario_container[time_key]:
-                self.scenario_act_slot.emit(time_key, msg["mapi"], msg["message"])
+        if self._end_time<self.current_time_idx:
+            self.scenario_end_slot.emit()
+        else:
+            if time_key in self.scenario_container.keys():
+                for msg in self.scenario_container[time_key]:
+                    self.scenario_act_slot.emit(time_key, msg["mapi"], msg["message"])
             
         self.current_time_idx += self.time_interval/1000 # update time index
     
@@ -68,9 +73,13 @@ class ScenarioRunner(QTimer):
                     self.scenario_container[scene["time"]] = [] # time indexed container
                     for event in scene["event"]: # for every events
                         self.scenario_container[scene["time"]].append(event) # append event
-            
+            self._end_time = max(list(self.scenario_container.keys()))
+
         except json.JSONDecodeError as e:
             print("JSON Decode error", str(e))
+            return False
+
+        return True
     
     # start timer
     def run_scenario(self):
@@ -145,6 +154,7 @@ class AVSimManager(QMainWindow):
         # runner instance (with time interval value, 100ms)
         self.runner = ScenarioRunner(interval_ms=100)
         self.runner.scenario_act_slot.connect(self.do_process)
+        self.runner.scenario_end_slot.connect(self.end_process)
         
         self.scenario_filepath = ""
         
@@ -235,8 +245,15 @@ class AVSimManager(QMainWindow):
                 
     # run scenario with timer
     def api_run_scenario(self):
+        self._mark_row_reset()
         self.runner.run_scenario()
         self.show_on_statusbar("Scenario runner is running...")
+
+    # end of scenario
+    def api_end_scenario(self):
+        self.runner.stop_scenario()
+        self.show_on_statusbar("Scenario runner works done")
+        QMessageBox.information(self, "Info", "Scenario runner works done")
     
     # stop scenario with timer
     def api_stop_scenario(self):
@@ -251,11 +268,15 @@ class AVSimManager(QMainWindow):
     # message api implemented function
     def do_process(self, time, mapi, message):
         self.mq_client.publish(mapi, message, 0) # publish mapi interface
-        
+
         self._mark_row_reset()
         for row in range(self.scenario_model.rowCount()):
-            if time == float(self.scenario_model.item(row, 1).text()):
+            if time == float(self.scenario_model.item(row, 0).text()):
                 self._mark_row_color(row)
+
+    # end process
+    def end_process(self):
+        self.api_end_scenario()
                 
     # request active notification
     def _mapi_request_active(self):

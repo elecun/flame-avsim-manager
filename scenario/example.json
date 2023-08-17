@@ -1,7 +1,7 @@
 {
   "scenario": [
     {
-        "time": 0.0,
+        "time": 0.1,
         "event": [
             { "mapi": "flame/avsim/carla/mapi_set_scenario_init",  "message": "{'app':'avsim-manager'}"}
         ]
