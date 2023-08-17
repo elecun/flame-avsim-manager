@@ -332,10 +332,11 @@ if __name__ == "__main__":
     parser.add_argument('--broker', nargs='?', required=True, help="Broker Address")
     args = parser.parse_args()
 
+    broker_address = "127.0.0.1"
     if args.broker is not None:
-        app = QApplication(sys.argv)
-        window = AVSimManager(broker_ip=args.broker)
-        window.show()
-        sys.exit(app.exec())
-    else:
-        print("Broker IP Address is required")
+        broker_address = args.broker
+    
+    app = QApplication(sys.argv)
+    window = AVSimManager(broker_ip=broker_address)
+    window.show()
+    sys.exit(app.exec())
