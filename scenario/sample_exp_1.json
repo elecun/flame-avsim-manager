@@ -1,0 +1,103 @@
+{
+  "scenario": [
+    {
+        "time": 0.1,
+        "event": [
+            { "mapi": "flame/avsim/carla/mapi_set_scenario_init",  "message": "{'app':'avsim-manager'}"}
+        ]
+    },
+    {
+      "time":2.0,
+      "event":[
+        { "mapi": "flame/avsim/carla/mapi_set_scenario_start",  "message": "{'app':'avsim-manager'}"}
+      ]
+    },
+    {
+      "time":3.0,
+      "event":[
+        { "mapi": "flame/avsim/cam/mapi_record_start",  "message": "{'app':'avsim-manager'}"},
+        { "mapi": "flame/avsim/neon/mapi_record_start",  "message": "{'app':'avsim-manager'}"},
+        { "mapi": "flame/avsim/cdlink/mapi_set_url",  "message": "{'app':'avsim-manager'}, 'url':'/'}"}
+      ]
+    },
+    {
+      "time":3.5,
+      "event":[
+        { "mapi": "flame/avsim/carla/mapi_set_scenario_start",  "message": "{'app':'avsim-manager'}"}
+      ]
+    },
+    {
+      "time":5.0,
+      "event":[
+        { "mapi": "flame/avsim/carla/mapi_set_scenario_start",  "message": "{'app':'avsim-manager'}"},
+        { "mapi": "flame/avsim/mixer/mapi_play",  "message": "{'app':'avsim-manager', 'file':'interior_ambience_10min.mp3', 'volume':0.3}"}
+      ]
+    },
+    {
+      "time":6.0,
+      "event":[
+        { "mapi": "flame/avsim/cdlink/mapi_set_url",  "message": "{'app':'avsim-manager', 'url':'/app/nback/visual/2/'}"}
+      ]
+    },
+    {
+      "time":10.0,
+      "event":[
+        { "mapi": "flame/avsim/cdlink/mapi_set_url",  "message": "{'app':'avsim-manager', 'url':'/app/nback/visual/2/card/'}"}
+      ]
+    },
+    {
+      "time":11.0,
+      "event":[
+        { "mapi": "flame/avsim/cdlink/mapi_nback_card",  "message": "{'app':'avsim-manager', 'code':2}"}
+      ]
+    },
+    {
+      "time":14.0,
+      "event":[
+        { "mapi": "flame/avsim/cdlink/mapi_nback_card",  "message": "{'app':'avsim-manager', 'code':3}"}
+      ]
+    },
+    {
+      "time":17.0,
+      "event":[
+        { "mapi": "flame/avsim/cdlink/mapi_nback_card",  "message": "{'app':'avsim-manager', 'code':6}"}
+      ]
+    },
+    {
+      "time":20.0,
+      "event":[
+        { "mapi": "flame/avsim/cdlink/mapi_nback_card",  "message": "{'app':'avsim-manager', 'code':7}"}
+      ]
+    },
+    {
+      "time":23.0,
+      "event":[
+        { "mapi": "flame/avsim/cdlink/mapi_nback_card",  "message": "{'app':'avsim-manager', 'code':2}"}
+      ]
+    },
+    {
+      "time":26.0,
+      "event":[
+        { "mapi": "flame/avsim/cdlink/mapi_nback_card",  "message": "{'app':'avsim-manager', 'code':7}"}
+      ]
+    },
+    {
+      "time":29.0,
+      "event":[
+        { "mapi": "flame/avsim/cdlink/mapi_nback_card",  "message": "{'app':'avsim-manager', 'code':1}"}
+      ]
+    },
+    {
+      "time":32.0,
+      "event":[
+        { "mapi": "flame/avsim/cdlink/mapi_nback_card",  "message": "{'app':'avsim-manager', 'code':9}"}
+      ]
+    },
+    {
+      "time":35.0,
+      "event":[
+        { "mapi": "flame/avsim/cdlink/mapi_nback_card",  "message": "{'app':'avsim-manager', 'code':1}"}
+      ]
+    }
+  ]
+}
