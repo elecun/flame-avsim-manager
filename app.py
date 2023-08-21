@@ -267,6 +267,7 @@ class AVSimManager(QMainWindow):
     
     # message api implemented function
     def do_process(self, time, mapi, message):
+        message.replace("'", "\"")
         self.mq_client.publish(mapi, message, 0) # publish mapi interface
 
         self._mark_row_reset()
@@ -277,6 +278,7 @@ class AVSimManager(QMainWindow):
     # end process
     def end_process(self):
         self.api_end_scenario()
+        
                 
     # request active notification
     def _mapi_request_active(self):
@@ -284,8 +286,8 @@ class AVSimManager(QMainWindow):
             msg = {'app':APP_NAME}
             self.mq_client.publish("flame/avsim/mapi_request_active", json.dumps(msg), 0)
     
+    # MAPI for active status notification
     def mapi_notify_active(self, payload):
-        # notified activation
         if type(payload)!= dict:
             print("error : payload must be dictionary type")
             return
