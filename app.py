@@ -283,7 +283,7 @@ class AVSimManager(QMainWindow):
     # request active notification
     def _mapi_request_active(self):
         if self.mq_client.is_connected():
-            msg = {'app':APP_NAME}
+            msg = {"app":APP_NAME}
             self.mq_client.publish("flame/avsim/mapi_request_active", json.dumps(msg), 0)
     
     # MAPI for active status notification
