@@ -144,7 +144,7 @@ class AVSimManager(QMainWindow):
         
         
         # for mqtt connection
-        self.mq_client = mqtt.Client(client_id="flame-avsim-manager", transport='tcp', protocol=mqtt.MQTTv311, clean_session=True)
+        self.mq_client = mqtt.Client(client_id=APP_NAME, transport='tcp', protocol=mqtt.MQTTv311, clean_session=True)
         self.mq_client.on_connect = self.on_mqtt_connect
         self.mq_client.on_message = self.on_mqtt_message
         self.mq_client.on_disconnect = self.on_mqtt_disconnect
